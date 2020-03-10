@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Hexo操作</title>
+    <url>/2020/03/10/hexo%E6%93%8D%E4%BD%9C/</url>
+    <content><![CDATA[]]></content>
+      <categories>
+        <category>Hexo操作</category>
+      </categories>
+      <tags>
+        <tag>-hexo -md</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>testfor——two</title>
     <url>/2020/03/08/testfor%E2%80%94%E2%80%94two/</url>
     <content><![CDATA[<p>#Title：测试一下第二篇博客<br>gogogogogogo<br>sadasfasfaf<br>问题：<br>1.图片怎么比较方便<br>2.如何归档<br>3.版面设计</p>
