@@ -202,7 +202,7 @@
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
           
-            <a href="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/" class="post-title-link" itemprop="url">Hexo操作</a>
+            <a href="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/" class="post-title-link" itemprop="url">Hexo基本操作</a>
         </h1>
 
         <div class="post-meta">
@@ -225,7 +225,7 @@
             </span>
 
           
-            <span id="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/" class="post-meta-item leancloud_visitors" data-flag-title="Hexo操作" title="阅读次数">
+            <span id="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/" class="post-meta-item leancloud_visitors" data-flag-title="Hexo基本操作" title="阅读次数">
               <span class="post-meta-item-icon">
                 <i class="fa fa-eye"></i>
               </span>
@@ -251,7 +251,7 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>0</span>
+              <span>1.5k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -270,115 +270,29 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>none</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
+          <p>##1. Hexo添加menu中的分类/标签等<br>博客最基本的需求就是对博文进行分类，初始化的Hexo只有首页和归档，如何进行添加呢？</p>
+<ol>
+<li>新建<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new<span class="built_in"> page </span>categories</span><br></pre></td></tr></table></figure>
+这样会在/Hexo/source新建categories文件夹，里边包含index.md</li>
+<li>处理index.md<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">categories</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2017</span><span class="number">-12</span><span class="number">-02</span> <span class="number">21</span><span class="string">:01:24</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">"categories"</span></span><br></pre></td></tr></table></figure>
+在其中加入type字段即可</li>
+<li>处理<strong>主题</strong>配置文件<figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">menu:</span></span><br><span class="line"><span class="symbol">  home:</span> / || home</span><br><span class="line">  <span class="meta">#about: /about/ || user</span></span><br><span class="line"><span class="symbol">  tags:</span> <span class="meta-keyword">/tags/</span> || tags</span><br><span class="line"><span class="symbol">  categories:</span> <span class="meta-keyword">/categories/</span> || th</span><br><span class="line"><span class="symbol">  archives:</span> <span class="meta-keyword">/archives/</span> || archive</span><br><span class="line">  <span class="meta">#schedule: /schedule/ || calendar</span></span><br><span class="line">  <span class="meta">#sitemap: /sitemap.xml || sitemap</span></span><br><span class="line">  <span class="meta">#commonweal: /404/ || heartbeat</span></span><br></pre></td></tr></table></figure>
+将其中的注释删除</li>
+<li>重新部署<figure class="highlight sas"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo clean <span class="variable">&amp;&amp;</span> hexo g <span class="variable">&amp;&amp;</span> hexo d</span><br></pre></td></tr></table></figure>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+</li>
+</ol>
+<h2 id="2-发布博文"><a href="#2-发布博文" class="headerlink" title="2. 发布博文"></a>2. 发布博文</h2><ol>
+<li>git bash新建<figure class="highlight plain"><figcaption><span>new "文章名称"```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">\Hexo\source\_posts会出现相关的文章名称.md文件</span><br><span class="line">2. 修改.md文件</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<hr>
+<p>title: title #文章標題<br>date: 2016-06-01 23:47:44 #文章生成時間<br>categories: “Hexo教程” #文章分類目錄 可以省略<br>tags: #文章標籤 可以省略<br>     - 标签1<br>     - 标签2<br> description: #你對本頁的描述 可以省略</p>
+<hr>
+<figure class="highlight clean"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line">初始化只有title和data，添加categories和tags即可</span><br><span class="line"><span class="number">3.</span> 撰写/保存/部署</span><br><span class="line">其中不要忘记加入```&lt;!-- more --&gt;```进行摘要展示</span><br><span class="line"></span><br><span class="line">&lt;!-- more --&gt;</span><br><span class="line"></span><br><span class="line">######所以说文章分类和文章标签只需要自己在写文章时加入，部署时自动生成</span><br><span class="line"></span><br><span class="line">## <span class="number">3.</span> 常用的MD语法</span><br><span class="line">######MD用的少，word与latex比较熟悉，所以记录一下常用的</span><br><span class="line">####标记与多重标记</span><br><span class="line">使用&gt;与&gt;&gt;表示标记</span><br><span class="line">&gt; 标记里再使用 </span><br><span class="line">&gt;&gt; 标记</span><br><span class="line"></span><br><span class="line">####多级标题</span><br><span class="line">使用多个#号表示多级标题</span><br><span class="line">&gt;# 一级</span><br><span class="line">## 二级</span><br><span class="line">### 三级</span><br><span class="line"></span><br><span class="line">####列表</span><br><span class="line">+-*表示无序列表</span><br><span class="line">* 我的微信公众号</span><br><span class="line">* 我的微信公众号</span><br><span class="line">* 我的微信公众号</span><br><span class="line">- 我的尾巴</span><br><span class="line"></span><br><span class="line">数字加英文.表示有序列表</span><br><span class="line">####分割线</span><br><span class="line">分割线可以由* - _（星号，减号，底线）这<span class="number">3</span>个符号的至少<span class="number">3</span>个符号表示，注意至少要<span class="number">3</span>个，且不需要连续，有空格也可以</span><br><span class="line">*******</span><br><span class="line">####链接</span><br><span class="line">链接的文字放在[]中，链接地址放在随后的（）中</span><br><span class="line">[我的知乎](https:<span class="comment">//www.zhihu.com/people/liu-hao-33-54)</span></span><br><span class="line"></span><br><span class="line">####图片</span><br><span class="line">与链接基本一致，加入！即可</span><br><span class="line">![微信](https:<span class="comment">//raw.githubusercontent.com/smshen/MarkdownPhotos/master/Res/test.jpg)</span></span><br><span class="line">####强调</span><br><span class="line">\*倾斜\*   </span><br><span class="line">\*\*加粗\*\*</span><br><span class="line">\~\~删除\~\~</span><br><span class="line">*倾斜*</span><br><span class="line">**加粗**</span><br><span class="line">~~删除~~</span><br><span class="line">####转义</span><br><span class="line">和latex等都差不多，用\即可</span><br><span class="line">####代码</span><br><span class="line">如果代码量比较少，只有单行的话，可以用单反引号包起来，如下：</span><br><span class="line">`asd`</span><br><span class="line">如果多行就用</span><br></pre></td></tr></table></figure>
+<p> abc<br>def</p>
+<p>```</p>
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/08/testfor%E2%80%94%E2%80%94two/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/touxiang.jpg">
-      <meta itemprop="name" content="南华">
-      <meta itemprop="description" content="一条该，从技术延申至生活">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="南华街617号">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/03/08/testfor%E2%80%94%E2%80%94two/" class="post-title-link" itemprop="url">testfor——two</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-03-08 22:45:24" itemprop="dateCreated datePublished" datetime="2020-03-08T22:45:24+08:00">2020-03-08</time>
-            </span>
-
-          
-            <span id="/2020/03/08/testfor%E2%80%94%E2%80%94two/" class="post-meta-item leancloud_visitors" data-flag-title="testfor——two" title="阅读次数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-eye"></i>
-              </span>
-              <span class="post-meta-item-text">阅读次数：</span>
-              <span class="leancloud-visitors-count"></span>
-            </span>
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="fa fa-comment-o"></i>
-      </span>
-      <span class="post-meta-item-text">Valine：</span>
-    
-    <a title="valine" href="/2020/03/08/testfor%E2%80%94%E2%80%94two/#valine-comments" itemprop="discussionUrl">
-      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/08/testfor%E2%80%94%E2%80%94two/" itemprop="commentCount"></span>
-    </a>
-  </span>
-  
-  <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-file-word-o"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>74</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-clock-o"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>#Title：测试一下第二篇博客<br>gogogogogogo<br>sadasfasfaf<br>问题：<br>1.图片怎么比较方便<br>2.如何归档<br>3.版面设计</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2020/03/08/testfor%E2%80%94%E2%80%94two/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
       
     </div>
 
@@ -451,7 +365,7 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>462</span>
+              <span>86</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
@@ -564,7 +478,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">2</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -651,7 +565,7 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">1k</span>
+    <span title="站点总字数">2k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
