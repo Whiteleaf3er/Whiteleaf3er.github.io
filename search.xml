@@ -1,76 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<search>
-  <entry>
-    <title>Hexo基本操作</title>
-    <url>/2020/03/10/hexo%E6%93%8D%E4%BD%9C/</url>
-    <content><![CDATA[<h2 id="Hexo添加menu中的分类-标签等"><a href="#Hexo添加menu中的分类-标签等" class="headerlink" title="Hexo添加menu中的分类/标签等"></a>Hexo添加menu中的分类/标签等</h2><p>博客最基本的需求就是对博文进行分类，初始化的Hexo只有首页和归档，如何进行添加呢？</p>
-<ol>
-<li>新建<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line">hexo new<span class="built_in"> page </span>categories</span><br></pre></td></tr></table></figure>
-这样会在/Hexo/source新建categories文件夹，里边包含index.md</li>
-<li>处理index.md<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">categories</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2017</span><span class="number">-12</span><span class="number">-02</span> <span class="number">21</span><span class="string">:01:24</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">"categories"</span></span><br></pre></td></tr></table></figure>
-在其中加入type字段即可</li>
-</ol>
-<a id="more"></a>
-
-<ol start="3">
-<li><p>处理主题配置文件</p>
-<figure class="highlight dts"><table><tr><td class="code"><pre><span class="line"><span class="symbol">menu:</span></span><br><span class="line"><span class="symbol">  home:</span> / || home</span><br><span class="line">  <span class="meta">#about: /about/ || user</span></span><br><span class="line"><span class="symbol">  tags:</span> <span class="meta-keyword">/tags/</span> || tags</span><br><span class="line"><span class="symbol">  categories:</span> <span class="meta-keyword">/categories/</span> || th</span><br><span class="line"><span class="symbol">  archives:</span> <span class="meta-keyword">/archives/</span> || archive</span><br><span class="line">  <span class="meta">#schedule: /schedule/ || calendar</span></span><br><span class="line">  <span class="meta">#sitemap: /sitemap.xml || sitemap</span></span><br><span class="line">  <span class="meta">#commonweal: /404/ || heartbeat</span></span><br></pre></td></tr></table></figure>
-<p>将其中的注释删除</p>
-</li>
-<li><p>部署</p>
-<p> <code>hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code></p>
-</li>
-</ol>
-<h2 id="发布博文"><a href="#发布博文" class="headerlink" title="发布博文"></a>发布博文</h2><ol>
-<li><p>git bash新建<br><code>hexo new &quot;文章名称&quot;</code><br>\Hexo\source_posts会出现相关的文章名称.md文件</p>
-</li>
-<li><p>修改.md文件</p>
-<figure class="highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">title</span> <span class="comment">#文章標題</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2016</span><span class="number">-06</span><span class="number">-01</span> <span class="number">23</span><span class="string">:47:44</span> <span class="comment">#文章生成時間</span></span><br><span class="line"><span class="attr">categories:</span> <span class="string">"Hexo教程"</span> <span class="comment">#文章分類目錄 可以省略</span></span><br><span class="line"><span class="attr">tags:</span> <span class="comment">#文章標籤 可以省略</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">标签1</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">标签2</span></span><br><span class="line"> <span class="attr">description:</span> <span class="comment">#你對本頁的描述 可以省略</span></span><br></pre></td></tr></table></figure>
-
-</li>
-</ol>
-<p>​    初始化只有title和data，添加categories和tags即可</p>
-<ol start="3">
-<li>撰写/保存/部署<br>其中不要忘记加入<code>&lt;!-- more --&gt;</code>进行摘要展示</li>
-</ol>
-<h2 id="常用的MD语法"><a href="#常用的MD语法" class="headerlink" title="常用的MD语法"></a>常用的MD语法</h2><p>​    MD用的少，word与latex比较熟悉，所以记录一下常用的</p>
-<h4 id="标记与多重标记"><a href="#标记与多重标记" class="headerlink" title="标记与多重标记"></a>标记与多重标记</h4><p>使用&gt;与&gt;&gt;表示标记</p>
-<blockquote>
-<p>标记里再使用 </p>
-<blockquote>
-<p>标记</p>
-</blockquote>
-</blockquote>
-<h4 id="多级标题"><a href="#多级标题" class="headerlink" title="多级标题"></a>多级标题</h4><p>使用1-6个#表示多级标题</p>
-<h4 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h4><p>+-*表示无序列表</p>
-<ul>
-<li>我的微信公众号</li>
-<li>我的微信公众号</li>
-<li>我的微信公众号</li>
-</ul>
-<ul>
-<li>我的尾巴</li>
-</ul>
-<p>数字加英文.表示有序列表</p>
-<h4 id="分割线"><a href="#分割线" class="headerlink" title="分割线"></a>分割线</h4><p>分割线可以由* - _（星号，减号，底线）这3个符号的至少3个符号表示，注意至少要3个，且不需要连续，有空格也可以</p>
-<hr>
-<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>链接的文字放在[]中，链接地址放在随后的（）中<br><a href="https://www.zhihu.com/people/liu-hao-33-54" target="_blank" rel="noopener">我的知乎</a></p>
-<h4 id="图片"><a href="#图片" class="headerlink" title="图片"></a>图片</h4><p>与链接基本一致，加入！即可<br><img src="https://raw.githubusercontent.com/smshen/MarkdownPhotos/master/Res/test.jpg" alt="微信"></p>
-<h4 id="强调"><a href="#强调" class="headerlink" title="强调"></a>强调</h4><p>*倾斜*<br>**加粗**<br>~~删除~~<br><em>倾斜</em><br><strong>加粗</strong><br><del>删除</del></p>
-<h4 id="转义"><a href="#转义" class="headerlink" title="转义"></a>转义</h4><p>和latex等都差不多，用\即可</p>
-<h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p>如果代码量比较少，只有单行的话，可以用单反引号包起来，如下：<br><code>asd</code><br>如果多行就用</p>
-<figure class="highlight c++"><table><tr><td class="code"><pre><span class="line"><span class="keyword">int</span> main&#123;</span><br><span class="line">	<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; temp;</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+<search> 
+  
+  
+    
+    <entry>
+      <title>Hexo基本操作</title>
+      <link href="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/"/>
+      <url>/2020/03/10/hexo%E6%93%8D%E4%BD%9C/</url>
+      
+        <content type="html"><![CDATA[<h2 id="Hexo添加menu中的分类-标签等"><a href="#Hexo添加menu中的分类-标签等" class="headerlink" title="Hexo添加menu中的分类/标签等"></a>Hexo添加menu中的分类/标签等</h2><p>博客最基本的需求就是对博文进行分类，初始化的Hexo只有首页和归档，如何进行添加呢？</p><ol><li>新建<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new<span class="built_in"> page </span>categories</span><br></pre></td></tr></table></figure>这样会在/Hexo/source新建categories文件夹，里边包含index.md</li><li>处理index.md<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">categories</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2017</span><span class="number">-12</span><span class="number">-02</span> <span class="number">21</span><span class="string">:01:24</span></span><br><span class="line"><span class="attr">type:</span> <span class="string">"categories"</span></span><br></pre></td></tr></table></figure>在其中加入type字段即可</li></ol><a id="more"></a><ol start="3"><li><p>处理主题配置文件</p><figure class="highlight dts"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">menu:</span></span><br><span class="line"><span class="symbol">  home:</span> / || home</span><br><span class="line">  <span class="meta">#about: /about/ || user</span></span><br><span class="line"><span class="symbol">  tags:</span> <span class="meta-keyword">/tags/</span> || tags</span><br><span class="line"><span class="symbol">  categories:</span> <span class="meta-keyword">/categories/</span> || th</span><br><span class="line"><span class="symbol">  archives:</span> <span class="meta-keyword">/archives/</span> || archive</span><br><span class="line">  <span class="meta">#schedule: /schedule/ || calendar</span></span><br><span class="line">  <span class="meta">#sitemap: /sitemap.xml || sitemap</span></span><br><span class="line">  <span class="meta">#commonweal: /404/ || heartbeat</span></span><br></pre></td></tr></table></figure><p>将其中的注释删除</p></li><li><p>部署</p><p> <code>hexo clean &amp;&amp; hexo g &amp;&amp; hexo d</code></p></li></ol><h2 id="发布博文"><a href="#发布博文" class="headerlink" title="发布博文"></a>发布博文</h2><ol><li><p>git bash新建<br><code>hexo new &quot;文章名称&quot;</code><br>\Hexo\source_posts会出现相关的文章名称.md文件</p></li><li><p>修改.md文件</p><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">title:</span> <span class="string">title</span> <span class="comment">#文章標題</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2016</span><span class="number">-06</span><span class="number">-01</span> <span class="number">23</span><span class="string">:47:44</span> <span class="comment">#文章生成時間</span></span><br><span class="line"><span class="attr">categories:</span> <span class="string">"Hexo教程"</span> <span class="comment">#文章分類目錄 可以省略</span></span><br><span class="line"><span class="attr">tags:</span> <span class="comment">#文章標籤 可以省略</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">标签1</span></span><br><span class="line">     <span class="bullet">-</span> <span class="string">标签2</span></span><br><span class="line"> <span class="attr">description:</span> <span class="comment">#你對本頁的描述 可以省略</span></span><br></pre></td></tr></table></figure></li></ol><p>​    初始化只有title和data，添加categories和tags即可</p><ol start="3"><li>撰写/保存/部署<br>其中不要忘记加入<code>&lt;!-- more --&gt;</code>进行摘要展示</li></ol><h2 id="常用的MD语法"><a href="#常用的MD语法" class="headerlink" title="常用的MD语法"></a>常用的MD语法</h2><p>​    MD用的少，word与latex比较熟悉，所以记录一下常用的</p><h4 id="标记与多重标记"><a href="#标记与多重标记" class="headerlink" title="标记与多重标记"></a>标记与多重标记</h4><p>使用&gt;与&gt;&gt;表示标记</p><blockquote><p>标记里再使用 </p><blockquote><p>标记</p></blockquote></blockquote><h4 id="多级标题"><a href="#多级标题" class="headerlink" title="多级标题"></a>多级标题</h4><p>使用1-6个#表示多级标题</p><h4 id="列表"><a href="#列表" class="headerlink" title="列表"></a>列表</h4><p>+-*表示无序列表</p><ul><li>我的微信公众号</li><li>我的微信公众号</li><li>我的微信公众号</li></ul><ul><li>我的尾巴</li></ul><p>数字加英文.表示有序列表</p><h4 id="分割线"><a href="#分割线" class="headerlink" title="分割线"></a>分割线</h4><p>分割线可以由* - _（星号，减号，底线）这3个符号的至少3个符号表示，注意至少要3个，且不需要连续，有空格也可以</p><hr><h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>链接的文字放在[]中，链接地址放在随后的（）中<br><a href="https://www.zhihu.com/people/liu-hao-33-54" target="_blank" rel="noopener">我的知乎</a></p><h4 id="图片"><a href="#图片" class="headerlink" title="图片"></a>图片</h4><p>与链接基本一致，加入！即可<br><img src="https://raw.githubusercontent.com/smshen/MarkdownPhotos/master/Res/test.jpg" alt="微信"></p><h4 id="强调"><a href="#强调" class="headerlink" title="强调"></a>强调</h4><p>*倾斜*<br>**加粗**<br>~~删除~~<br><em>倾斜</em><br><strong>加粗</strong><br><del>删除</del></p><h4 id="转义"><a href="#转义" class="headerlink" title="转义"></a>转义</h4><p>和latex等都差不多，用\即可</p><h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p>如果代码量比较少，只有单行的话，可以用单反引号包起来，如下：<br><code>asd</code><br>如果多行就用</p><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> main&#123;</span><br><span class="line"><span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; temp;</span><br><span class="line"><span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+      
+      
       <categories>
-        <category>Hexo操作</category>
+          
+          <category> Hexo操作 </category>
+          
       </categories>
-      <tags>
-        <tag>-hexo -md</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>关于博客</title>
-    <url>/2020/03/08/%E5%85%B3%E4%BA%8E%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</url>
-    <content><![CDATA[<p>为了规则、规律地进行记录与分享,主要分为以下4个方面</p>
-<h2 id="c-刷题笔记"><a href="#c-刷题笔记" class="headerlink" title="c++/刷题笔记"></a>c++/刷题笔记</h2><h2 id="时事吐槽"><a href="#时事吐槽" class="headerlink" title="时事吐槽"></a>时事吐槽</h2><h2 id="学习-实习"><a href="#学习-实习" class="headerlink" title="学习/实习"></a>学习/实习</h2><h2 id="comment-share"><a href="#comment-share" class="headerlink" title="comment/share"></a>comment/share</h2>]]></content>
-  </entry>
+      
+      
+        <tags>
+            
+            <tag> -hexo -md </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>关于博客</title>
+      <link href="/2020/03/08/%E5%85%B3%E4%BA%8E%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/"/>
+      <url>/2020/03/08/%E5%85%B3%E4%BA%8E%E8%BF%99%E4%B8%AA%E5%8D%9A%E5%AE%A2/</url>
+      
+        <content type="html"><![CDATA[<p>为了规则、规律地进行记录与分享,主要分为以下4个方面</p><h2 id="c-刷题笔记"><a href="#c-刷题笔记" class="headerlink" title="c++/刷题笔记"></a>c++/刷题笔记</h2><h2 id="时事吐槽"><a href="#时事吐槽" class="headerlink" title="时事吐槽"></a>时事吐槽</h2><h2 id="学习-实习"><a href="#学习-实习" class="headerlink" title="学习/实习"></a>学习/实习</h2><h2 id="comment-share"><a href="#comment-share" class="headerlink" title="comment/share"></a>comment/share</h2>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+  
+  
 </search>
