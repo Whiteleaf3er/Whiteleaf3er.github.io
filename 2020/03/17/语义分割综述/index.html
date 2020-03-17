@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Gemini","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="什么是语义分割计算机视觉的相关任务从图像识别分类到目标检测到语义分割，任务量的难度逐步加大，图像识别仅仅需要预测出一张图片是哪一个类别，目标检测需要将图片中包含的各个类都用方框框起来，对每个框进行预测，而语义分割是对每一个像素点进行预测，通常又被称为密集预测。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="语义分割综述">
+<meta property="og:url" content="http://yoursite.com/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/index.html">
+<meta property="og:site_name" content="南华街617号">
+<meta property="og:description" content="什么是语义分割计算机视觉的相关任务从图像识别分类到目标检测到语义分割，任务量的难度逐步加大，图像识别仅仅需要预测出一张图片是哪一个类别，目标检测需要将图片中包含的各个类都用方框框起来，对每个框进行预测，而语义分割是对每一个像素点进行预测，通常又被称为密集预测。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317203550548.png">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317203456905.png">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317205448920.png">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317205417730.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20191030153845940.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20181223184533975.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxNzc1ODEw,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317212212721.png">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317212249458.png">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317221518265.png">
+<meta property="og:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317221552692.png">
+<meta property="article:published_time" content="2020-03-17T12:16:13.000Z">
+<meta property="article:modified_time" content="2020-03-17T14:40:11.194Z">
+<meta property="article:author" content="南华">
+<meta property="article:tag" content="语义分割">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="e:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317203550548.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>语义分割综述 | 南华街617号</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">南华街617号</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">七栋一单元11-2</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+      <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+  </div>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/touxiang.jpg">
+      <meta itemprop="name" content="南华">
+      <meta itemprop="description" content="一条该，从技术延申至生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="南华街617号">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          语义分割综述
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-17 20:16:13" itemprop="dateCreated datePublished" datetime="2020-03-17T20:16:13+08:00">2020-03-17</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BB%B4%E6%BB%B4%E5%AE%9E%E4%B9%A0-%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2/" itemprop="url" rel="index"><span itemprop="name">滴滴实习-语义分割</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/" class="post-meta-item leancloud_visitors" data-flag-title="语义分割综述" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>13k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>11 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="什么是语义分割"><a href="#什么是语义分割" class="headerlink" title="什么是语义分割"></a>什么是语义分割</h1><p>计算机视觉的相关任务从图像识别分类到目标检测到语义分割，任务量的难度逐步加大，图像识别仅仅需要预测出一张图片是哪一个类别，目标检测需要将图片中包含的各个类都用方框框起来，对每个框进行预测，而语义分割是对每一个像素点进行预测，通常又被称为密集预测。</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317203550548.png" alt="image-20200317203550548"></p>
+<a id="more"></a>
+
+<h1 id="语义分割模型"><a href="#语义分割模型" class="headerlink" title="语义分割模型"></a>语义分割模型</h1><p>通常图像分割模型是<strong>Encoder-Decoder</strong>结构。Encoder部分通过<strong>下采样</strong>降低输入的空间分辨率，从而生成一个低分辨率的特征映射（计算高效且能够有效区分不同类别）；Decoder则对这些特征描述进行<strong>上采样</strong>，将其恢复成全分辨率的分割图。</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317203456905.png" alt="image-20200317203456905"></p>
+<h2 id="Segnet模型"><a href="#Segnet模型" class="headerlink" title="Segnet模型"></a>Segnet模型</h2><h4 id="简述Segnet"><a href="#简述Segnet" class="headerlink" title="简述Segnet"></a>简述Segnet</h4><p>segnet属于基础的语义分割模型，结构类似于上图，编码部分可以采用不同的网络结构进行下采样降低分辨率并提取特征，比如VGG或Mobilenet，VGG再经典不过，都比较熟悉，3*3的卷积和池化堆叠，这里简述一下Mobilenet的网络结构</p>
+<h4 id="Encoder模块——Mobilenet网络结构"><a href="#Encoder模块——Mobilenet网络结构" class="headerlink" title="Encoder模块——Mobilenet网络结构"></a>Encoder模块——Mobilenet网络结构</h4><p>MobileNet模型是Google针对手机等嵌入式设备提出的一种轻量级的深层神经网络，其使用的核心思想便是<strong>depthwise separable convolution</strong>。</p>
+<p>对于一个卷积过程而言：</p>
+<p>正常的卷积操作：假设有一个3×3大小的卷积层，其输入通道为16、输出通道为32。我是这样理解的，WxHx16的图像通过3x3x16的卷积核进行卷积，卷积过程中每个3x3x1遍历对应的WxHx1，如果是SAME的形式输出分辨率不变则是，WxHx1，而3x3x16就会得到16个WxHx1即WxHx16，WxH中各个像素点相加（16个相叠加），则得到了WxHx1，但是这里不仅是3x3x16，还要注意输出通道数，也就是3x3x16x32，32个3x3x16的卷积核会遍历输入图像中的16个输入通道，所以输出是WxHx32，所需参数为16×32×3×3=4608个。</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317205448920.png" alt="image-20200317205448920"></p>
+<p>应用深度可分离卷积：第一步为<strong>Depthwise conv</strong>用16个3×3大小的卷积核<strong>分别遍历</strong>16通道的数据，得到了16个特征图谱。也就是第i个3x3的卷积核负责遍历第i个输入通道得到WxH的特征图。接着第二步为<strong>Pointwise conv</strong>，用32个1×1大小的卷积核遍历这16个特征图，其实第二步也就是正常的卷积操作。所需参数为16×3×3+16×32×1×1=656个。</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317205417730.png" alt="image-20200317205417730"></p>
+<p>重点在于理解<strong>Depthwise conv</strong>中的每个卷积核负责一个输入通道输出一个通道，而不是正常卷积操作中的每个卷积核负责一个通道，但输出的是1/32个输出通道（还有其他卷积核的结果加起来，才是一个输出通道）</p>
+<p>知道了核心模块其余就很简单了，各种卷积的堆叠</p>
+<p><img src="https://img-blog.csdnimg.cn/20191030153845940.png#pic_center" alt="在这里插入图片描述"></p>
+<h4 id="Encoder代码（Mobilenet结构）"><a href="#Encoder代码（Mobilenet结构）" class="headerlink" title="Encoder代码（Mobilenet结构）"></a>Encoder代码（Mobilenet结构）</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> keras.models <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> keras.layers <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">import</span> keras.backend <span class="keyword">as</span> K</span><br><span class="line"><span class="keyword">import</span> keras</span><br><span class="line"></span><br><span class="line">IMAGE_ORDERING = <span class="string">'channels_last'</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">relu6</span><span class="params">(x)</span>:</span></span><br><span class="line">	<span class="keyword">return</span> K.relu(x, max_value=<span class="number">6</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_conv_block</span><span class="params">(inputs, filters, alpha, kernel=<span class="params">(<span class="number">3</span>, <span class="number">3</span>)</span>, strides=<span class="params">(<span class="number">1</span>, <span class="number">1</span>)</span>)</span>:</span></span><br><span class="line"></span><br><span class="line">	channel_axis = <span class="number">1</span> <span class="keyword">if</span> IMAGE_ORDERING == <span class="string">'channels_first'</span> <span class="keyword">else</span> <span class="number">-1</span></span><br><span class="line">	filters = int(filters * alpha)</span><br><span class="line">	x = ZeroPadding2D(padding=(<span class="number">1</span>, <span class="number">1</span>), name=<span class="string">'conv1_pad'</span>, data_format=IMAGE_ORDERING  )(inputs)</span><br><span class="line">	x = Conv2D(filters, kernel , data_format=IMAGE_ORDERING  ,</span><br><span class="line">										padding=<span class="string">'valid'</span>,</span><br><span class="line">										use_bias=<span class="literal">False</span>,</span><br><span class="line">										strides=strides,</span><br><span class="line">										name=<span class="string">'conv1'</span>)(x)</span><br><span class="line">	x = BatchNormalization(axis=channel_axis, name=<span class="string">'conv1_bn'</span>)(x)</span><br><span class="line">	<span class="keyword">return</span> Activation(relu6, name=<span class="string">'conv1_relu'</span>)(x)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_depthwise_conv_block</span><span class="params">(inputs, pointwise_conv_filters, alpha,</span></span></span><br><span class="line"><span class="function"><span class="params">													depth_multiplier=<span class="number">1</span>, strides=<span class="params">(<span class="number">1</span>, <span class="number">1</span>)</span>, block_id=<span class="number">1</span>)</span>:</span></span><br><span class="line"></span><br><span class="line">	channel_axis = <span class="number">1</span> <span class="keyword">if</span> IMAGE_ORDERING == <span class="string">'channels_first'</span> <span class="keyword">else</span> <span class="number">-1</span></span><br><span class="line">	pointwise_conv_filters = int(pointwise_conv_filters * alpha)</span><br><span class="line"></span><br><span class="line">	x = ZeroPadding2D((<span class="number">1</span>, <span class="number">1</span>) , data_format=IMAGE_ORDERING , name=<span class="string">'conv_pad_%d'</span> % block_id)(inputs)</span><br><span class="line">	x = DepthwiseConv2D((<span class="number">3</span>, <span class="number">3</span>) , data_format=IMAGE_ORDERING ,</span><br><span class="line">														 padding=<span class="string">'valid'</span>,</span><br><span class="line">														 depth_multiplier=depth_multiplier,</span><br><span class="line">														 strides=strides,</span><br><span class="line">														 use_bias=<span class="literal">False</span>,</span><br><span class="line">														 name=<span class="string">'conv_dw_%d'</span> % block_id)(x)</span><br><span class="line">	x = BatchNormalization(</span><br><span class="line">			axis=channel_axis, name=<span class="string">'conv_dw_%d_bn'</span> % block_id)(x)</span><br><span class="line">	x = Activation(relu6, name=<span class="string">'conv_dw_%d_relu'</span> % block_id)(x)</span><br><span class="line"></span><br><span class="line">	x = Conv2D(pointwise_conv_filters, (<span class="number">1</span>, <span class="number">1</span>), data_format=IMAGE_ORDERING ,</span><br><span class="line">										padding=<span class="string">'same'</span>,</span><br><span class="line">										use_bias=<span class="literal">False</span>,</span><br><span class="line">										strides=(<span class="number">1</span>, <span class="number">1</span>),</span><br><span class="line">										name=<span class="string">'conv_pw_%d'</span> % block_id)(x)</span><br><span class="line">	x = BatchNormalization(axis=channel_axis,</span><br><span class="line">																name=<span class="string">'conv_pw_%d_bn'</span> % block_id)(x)</span><br><span class="line">	<span class="keyword">return</span> Activation(relu6, name=<span class="string">'conv_pw_%d_relu'</span> % block_id)(x)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_mobilenet_encoder</span><span class="params">( input_height=<span class="number">224</span> ,  input_width=<span class="number">224</span> , pretrained=<span class="string">'imagenet'</span> )</span>:</span></span><br><span class="line"></span><br><span class="line">	alpha=<span class="number">1.0</span></span><br><span class="line">	depth_multiplier=<span class="number">1</span></span><br><span class="line">	dropout=<span class="number">1e-3</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	img_input = Input(shape=(input_height,input_width , <span class="number">3</span> ))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	x = _conv_block(img_input, <span class="number">32</span>, alpha, strides=(<span class="number">2</span>, <span class="number">2</span>))</span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">64</span>, alpha, depth_multiplier, block_id=<span class="number">1</span>) </span><br><span class="line">	f1 = x</span><br><span class="line"></span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">128</span>, alpha, depth_multiplier,</span><br><span class="line">														strides=(<span class="number">2</span>, <span class="number">2</span>), block_id=<span class="number">2</span>)  </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">128</span>, alpha, depth_multiplier, block_id=<span class="number">3</span>) </span><br><span class="line">	f2 = x</span><br><span class="line"></span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">256</span>, alpha, depth_multiplier,</span><br><span class="line">														strides=(<span class="number">2</span>, <span class="number">2</span>), block_id=<span class="number">4</span>)  </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">256</span>, alpha, depth_multiplier, block_id=<span class="number">5</span>) </span><br><span class="line">	f3 = x</span><br><span class="line"></span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">512</span>, alpha, depth_multiplier,</span><br><span class="line">														strides=(<span class="number">2</span>, <span class="number">2</span>), block_id=<span class="number">6</span>) </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">512</span>, alpha, depth_multiplier, block_id=<span class="number">7</span>) </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">512</span>, alpha, depth_multiplier, block_id=<span class="number">8</span>) </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">512</span>, alpha, depth_multiplier, block_id=<span class="number">9</span>) </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">512</span>, alpha, depth_multiplier, block_id=<span class="number">10</span>) </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">512</span>, alpha, depth_multiplier, block_id=<span class="number">11</span>) </span><br><span class="line">	f4 = x </span><br><span class="line"></span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">1024</span>, alpha, depth_multiplier,</span><br><span class="line">														strides=(<span class="number">2</span>, <span class="number">2</span>), block_id=<span class="number">12</span>)  </span><br><span class="line">	x = _depthwise_conv_block(x, <span class="number">1024</span>, alpha, depth_multiplier, block_id=<span class="number">13</span>) </span><br><span class="line">	f5 = x </span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> img_input , [f1 , f2 , f3 , f4 , f5 ]</span><br></pre></td></tr></table></figure>
+
+<p>由上代码发现返回了$ f_i $（i=12345），这个是什么呢？</p>
+<p>可以发现每个 $ f_i $到$ f_{i+1} $之间都有一次strides = （2，2）的conv操作，也就每次图像的分辨率都缩小了一倍</p>
+<p>例如f4的shape是N x H/16 x W/16 x 512</p>
+<p>而这些$ f_i $有什么用了，进入<strong>decoder</strong>部分吧</p>
+<h4 id="Decoder模块"><a href="#Decoder模块" class="headerlink" title="Decoder模块"></a>Decoder模块</h4><p>Decoder将图像<strong>分辨率进行恢复</strong>，把<strong>获得的特征</strong>重新映射到图中的每一个像素点，用于<strong>每一个像素点的分类</strong>。</p>
+<p>所以这也是为什么要保存$ f_i $的原因了，因为需要把特征进行再利用</p>
+<p>如何将分辨率恢复呢？重点在于上采样模块</p>
+<p><img src="https://img-blog.csdnimg.cn/20181223184533975.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQxNzc1ODEw,size_16,color_FFFFFF,t_70" alt="img"></p>
+<p>具体的操作其实也就是逐行逐列一一复制添加</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> keras.layers <span class="keyword">import</span> UpSampling2D</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</span><br><span class="line">x=np.array([<span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">5</span>,<span class="number">6</span>,<span class="number">7</span>,<span class="number">8</span>,<span class="number">9</span>,<span class="number">10</span>,<span class="number">11</span>,<span class="number">12</span>,<span class="number">13</span>,<span class="number">14</span>,<span class="number">15</span>,<span class="number">16</span>])</span><br><span class="line">x=x.reshape(<span class="number">1</span>,<span class="number">4</span>,<span class="number">4</span>,<span class="number">1</span>)</span><br><span class="line">print(x)</span><br><span class="line">x=tf.convert_to_tensor(x)</span><br><span class="line">y=UpSampling2D(size=(<span class="number">2</span>,<span class="number">2</span>))(x)</span><br><span class="line"><span class="keyword">with</span> tf.Session() <span class="keyword">as</span> sess:</span><br><span class="line">    print(y.eval())</span><br></pre></td></tr></table></figure>
+
+<p>print(x):</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317212212721.png" alt="image-20200317212212721"></p>
+<p>print(y.eval()):</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317212249458.png" alt="image-20200317212249458"></p>
+<h4 id="Decoder代码"><a href="#Decoder代码" class="headerlink" title="Decoder代码"></a>Decoder代码</h4><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> keras.models <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> keras.layers <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> nets.mobilenet <span class="keyword">import</span> get_mobilenet_encoder</span><br><span class="line"></span><br><span class="line">IMAGE_ORDERING = <span class="string">'channels_last'</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">segnet_decoder</span><span class="params">(  f , n_classes , n_up=<span class="number">3</span> )</span>:</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">assert</span> n_up &gt;= <span class="number">2</span></span><br><span class="line"></span><br><span class="line">	o = f</span><br><span class="line">	o = ( ZeroPadding2D( (<span class="number">1</span>,<span class="number">1</span>) , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( Conv2D(<span class="number">512</span>, (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>, data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line">	<span class="comment"># 进行一次UpSampling2D，此时hw变为原来的1/8</span></span><br><span class="line">	<span class="comment"># 52,52,512</span></span><br><span class="line">	o = ( UpSampling2D( (<span class="number">2</span>,<span class="number">2</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	o = ( ZeroPadding2D( (<span class="number">1</span>,<span class="number">1</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	o = ( Conv2D( <span class="number">256</span>, (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>, data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 进行一次UpSampling2D，此时hw变为原来的1/4</span></span><br><span class="line">	<span class="comment"># 104,104,256</span></span><br><span class="line">	<span class="keyword">for</span> _ <span class="keyword">in</span> range(n_up<span class="number">-2</span>):</span><br><span class="line">		o = ( UpSampling2D((<span class="number">2</span>,<span class="number">2</span>)  , data_format=IMAGE_ORDERING ) )(o)</span><br><span class="line">		o = ( ZeroPadding2D((<span class="number">1</span>,<span class="number">1</span>) , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">		o = ( Conv2D( <span class="number">128</span> , (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span> , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">		o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 进行一次UpSampling2D，此时hw变为原来的1/2</span></span><br><span class="line">	<span class="comment"># 208,208,128</span></span><br><span class="line">	o = ( UpSampling2D((<span class="number">2</span>,<span class="number">2</span>)  , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( ZeroPadding2D((<span class="number">1</span>,<span class="number">1</span>)  , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( Conv2D( <span class="number">64</span> , (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>  , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 此时输出为h_input/2,w_input/2,nclasses</span></span><br><span class="line">	o =  Conv2D( n_classes , (<span class="number">3</span>, <span class="number">3</span>) , padding=<span class="string">'same'</span>, data_format=IMAGE_ORDERING )( o )</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> o </span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_segnet</span><span class="params">( n_classes , encoder  ,  input_height=<span class="number">416</span>, input_width=<span class="number">608</span> , encoder_level=<span class="number">3</span>)</span>:</span></span><br><span class="line">	<span class="comment"># encoder通过主干网络</span></span><br><span class="line">	img_input , levels = encoder( input_height=input_height ,  input_width=input_width )</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 获取hw压缩四次后的结果</span></span><br><span class="line">	feat = levels[encoder_level]</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 将特征传入segnet网络</span></span><br><span class="line">	o = segnet_decoder(feat, n_classes, n_up=<span class="number">3</span> )</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 将结果进行reshape</span></span><br><span class="line">	o = Reshape((int(input_height/<span class="number">2</span>)*int(input_width/<span class="number">2</span>), <span class="number">-1</span>))(o)</span><br><span class="line">	o = Softmax()(o)</span><br><span class="line">	model = Model(img_input,o)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> model</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">mobilenet_segnet</span><span class="params">( n_classes ,  input_height=<span class="number">224</span>, input_width=<span class="number">224</span> , encoder_level=<span class="number">3</span>)</span>:</span></span><br><span class="line"></span><br><span class="line">	model = _segnet( n_classes , get_mobilenet_encoder ,  input_height=input_height, input_width=input_width , encoder_level=encoder_level)</span><br><span class="line">	model.model_name = <span class="string">"mobilenet_segnet"</span></span><br><span class="line">	<span class="keyword">return</span> model</span><br></pre></td></tr></table></figure>
+
+<p>第49行：o = segnet_decoder(feat, n_classes, n_up=3 )</p>
+<p>将分辨率降低4次后提取到的特征传入segnet网络进行上采样恢复，恢复后为H/2 x W/2 x nclasses，之后reshape为 HxW/4 x nclasses，再调用softmax函数进行分类</p>
+<p>这里回想一下在一个图像5分类的工作中，某个batch_size = 1的batch，也就是一张图片在进入最后的softmax前shape为1 x 5，之后通过softmax得到5个类的概率值</p>
+<p>而这里的segnet，<strong>1张图片通过softmax得到HxW/4 x nclasses的数据结构，表示的也就是H/2 x W/2这样一张图片，每个像素点都拥有对5个类别的预测概率值，也就实现了最初想要达到的对每个像素点进行预测</strong></p>
+<h4 id="Segnet小结"><a href="#Segnet小结" class="headerlink" title="Segnet小结"></a>Segnet小结</h4><p>总的来说，Segnet是一个经典的语义分割网络结构，首先降低分辨率提取特征，再将某一次（第4次）提取到的特征进行上采样恢复分辨率，最后对大分辨率图像中每个像素点都进行类别预测</p>
+<h2 id="Unet模型"><a href="#Unet模型" class="headerlink" title="Unet模型"></a>Unet模型</h2><h4 id="简述Unet"><a href="#简述Unet" class="headerlink" title="简述Unet"></a>简述Unet</h4><p>在进行segnet的详解的时候知道，其中<strong>只选了一个压缩了四次的特征层</strong>进行三次上采样得到最后的结果。<br>但是unet不一样，其<strong>用到了压缩了二、三、四次的特征层</strong>，最后输出图像分割的结果（可以选择是否需要压缩了一次的特征层）。也就是它利用了多个特征层，使得提取到的特征更加的丰富，为什么没有第一层呢？我猜想是因为第一层特征丰富度不够，所以直接放弃了2333</p>
+<h4 id="Encoder模块"><a href="#Encoder模块" class="headerlink" title="Encoder模块"></a>Encoder模块</h4><p>与上述Segnet相同，采取Mobilenet来提取特征</p>
+<h4 id="Decoder模块-1"><a href="#Decoder模块-1" class="headerlink" title="Decoder模块"></a>Decoder模块</h4><p>首先我们获得了f1，f2，f3，f4，f5，5个层次的特征，我们先看一下各自的shape</p>
+<p>f1：208 x 208 x 64</p>
+<p>f2：104 x 104 x 128</p>
+<p>f3：52 x 52 x 256</p>
+<p>f4：26 x 26 x 512</p>
+<p>f5：13 x 13 x 1024</p>
+<p>那么如何不同于Segnet仅利用到了f4，Unet如何利用f2-f4呢，其实主要就一个操作：</p>
+<p>将fi上采样后达到与fi-1相同的分辨率，再进行concat拼接起来，再重复</p>
+<p>我们来看一下代码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> keras.models <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> keras.layers <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> nets.mobilenet <span class="keyword">import</span> get_mobilenet_encoder</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">IMAGE_ORDERING = <span class="string">'channels_last'</span></span><br><span class="line">MERGE_AXIS = <span class="number">-1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_unet</span><span class="params">( n_classes , encoder , l1_skip_conn=True,  input_height=<span class="number">416</span>, input_width=<span class="number">608</span>  )</span>:</span></span><br><span class="line"></span><br><span class="line">	img_input , levels = encoder( input_height=input_height ,  input_width=input_width )</span><br><span class="line">	[f1 , f2 , f3 , f4 , f5 ] = levels </span><br><span class="line"></span><br><span class="line">	o = f4</span><br><span class="line">	<span class="comment"># 26,26,512</span></span><br><span class="line">	o = ( ZeroPadding2D( (<span class="number">1</span>,<span class="number">1</span>) , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( Conv2D(<span class="number">512</span>, (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>, data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 52,52,512</span></span><br><span class="line">	o = ( UpSampling2D( (<span class="number">2</span>,<span class="number">2</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	<span class="comment"># 52,52,768</span></span><br><span class="line">	o = ( concatenate([ o ,f3],axis=MERGE_AXIS )  )</span><br><span class="line">	o = ( ZeroPadding2D( (<span class="number">1</span>,<span class="number">1</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	<span class="comment"># 52,52,256</span></span><br><span class="line">	o = ( Conv2D( <span class="number">256</span>, (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>, data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 104,104,256</span></span><br><span class="line">	o = ( UpSampling2D( (<span class="number">2</span>,<span class="number">2</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	<span class="comment"># 104,104,384</span></span><br><span class="line">	o = ( concatenate([o,f2],axis=MERGE_AXIS ) )</span><br><span class="line">	o = ( ZeroPadding2D((<span class="number">1</span>,<span class="number">1</span>) , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	<span class="comment"># 104,104,128</span></span><br><span class="line">	o = ( Conv2D( <span class="number">128</span> , (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span> , data_format=IMAGE_ORDERING ) )(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line">	<span class="comment"># 208,208,128</span></span><br><span class="line">	o = ( UpSampling2D( (<span class="number">2</span>,<span class="number">2</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">if</span> l1_skip_conn:</span><br><span class="line">		o = ( concatenate([o,f1],axis=MERGE_AXIS ) )</span><br><span class="line"></span><br><span class="line">	o = ( ZeroPadding2D((<span class="number">1</span>,<span class="number">1</span>)  , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( Conv2D( <span class="number">64</span> , (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>  , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">	o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line">	o =  Conv2D( n_classes , (<span class="number">3</span>, <span class="number">3</span>) , padding=<span class="string">'same'</span>, data_format=IMAGE_ORDERING )( o )</span><br><span class="line">	</span><br><span class="line">	<span class="comment"># 将结果进行reshape</span></span><br><span class="line">	o = Reshape((int(input_height/<span class="number">2</span>)*int(input_width/<span class="number">2</span>), <span class="number">-1</span>))(o)</span><br><span class="line">	o = Softmax()(o)</span><br><span class="line">	model = Model(img_input,o)</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> model</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">mobilenet_unet</span><span class="params">( n_classes ,  input_height=<span class="number">224</span>, input_width=<span class="number">224</span> , encoder_level=<span class="number">3</span>)</span>:</span></span><br><span class="line"></span><br><span class="line">	model =  _unet( n_classes , get_mobilenet_encoder ,  input_height=input_height, input_width=input_width  )</span><br><span class="line">	model.model_name = <span class="string">"mobilenet_unet"</span></span><br><span class="line">	<span class="keyword">return</span> model</span><br></pre></td></tr></table></figure>
+
+<p>我们来看看其中的15-24行做了什么：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">o = f4</span><br><span class="line"><span class="comment"># 26,26,512</span></span><br><span class="line">o = ( ZeroPadding2D( (<span class="number">1</span>,<span class="number">1</span>) , data_format=IMAGE_ORDERING ))(o)</span><br><span class="line">o = ( Conv2D(<span class="number">512</span>, (<span class="number">3</span>, <span class="number">3</span>), padding=<span class="string">'valid'</span>, data_format=IMAGE_ORDERING))(o)</span><br><span class="line">o = ( BatchNormalization())(o)</span><br><span class="line"></span><br><span class="line"><span class="comment"># 52,52,512</span></span><br><span class="line">o = ( UpSampling2D( (<span class="number">2</span>,<span class="number">2</span>), data_format=IMAGE_ORDERING))(o)</span><br><span class="line"><span class="comment"># 52,52,768</span></span><br><span class="line">o = ( concatenate([ o ,f3],axis=MERGE_AXIS )  )</span><br></pre></td></tr></table></figure>
+
+<p>其实也就是对f4进行了一次<strong>上采样</strong>，26 x 26 x 512——52 x 52 x 512，此时分辨率与f3相同，再与f3进行<strong>拼接</strong>，f3为52 x 52 x 256，最后得到的shape为52 x 52 x 768</p>
+<p>之后就是重复这个工作达到了<strong>利用多个特征层的目的</strong></p>
+<h4 id="Unet小结"><a href="#Unet小结" class="headerlink" title="Unet小结"></a>Unet小结</h4><p>Unet相比于Segnet最大的改进之处即在于Decoder时<strong>利用了多个Encoder的特征层</strong>，核心在于将fi进行上采样后，与fi-1进行拼接，再重复工作</p>
+<h2 id="Pspnet"><a href="#Pspnet" class="headerlink" title="Pspnet"></a>Pspnet</h2><h4 id="简述-Pspnet"><a href="#简述-Pspnet" class="headerlink" title="简述 Pspnet"></a>简述 Pspnet</h4><p>pspnet名字源于其主要采用了<strong>pspblock</strong></p>
+<p>也就是psp模块。<br>psp模块的样式如下，其psp的核心重点是采用了步长不同，pool_size不同的平均池化层进行池化，然后将池化的结果重新resize到一个hw上后，再concatenate。<br>即：<br>红色：这是在每个特征map上执行全局平均池的最粗略层次，用于生成单个输出。<br>橙色：这是第二层，将特征map划分为2×2个子区域，然后对每个子区域进行平均池化。<br>蓝色：这是第三层，将特征 map划分为3×3个子区域，然后对每个子区域进行平均池化。<br>绿色：这是将特征map划分为6×6个子区域的最细层次，然后对每个子区域执行池化。<br><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317221518265.png" alt="image-20200317221518265"></p>
+<p>比如下图，在psp_block中，input的shape为18 x 18 x 1024</p>
+<p>首先是红色的，也就是全局均值池化，使用的pool_size和stride为18 x 18，输出为1x 1x 1024，再通过1 x 1的卷积核进行通道数调整，再通过resize_image为18 x 18的分辨率，输出为18 x 18 x 512</p>
+<p>接着是橙色的，首先将18 x 18 x 1024 划分为4个区域，再对么区域进行均值池化，其代码实现也就是使用pool_size和stride为9 x 9，此时输出为2 x 2 x 1024，再调整通道数和分辨率，保证输出也为18 x 18 x 512</p>
+<p>后两种类似</p>
+<p><img src="E:%5CHexo%5Csource_posts%5C%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0.assets%5Cimage-20200317221552692.png" alt="image-20200317221552692"></p>
+<h4 id="Encoder模块-1"><a href="#Encoder模块-1" class="headerlink" title="Encoder模块"></a>Encoder模块</h4><p>类似，提取出多个特征层</p>
+<h4 id="Decoder模块-2"><a href="#Decoder模块-2" class="headerlink" title="Decoder模块"></a>Decoder模块</h4><p>先上代码</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">from</span> keras.models <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> keras.layers <span class="keyword">import</span> *</span><br><span class="line"><span class="keyword">from</span> nets.mobilenet <span class="keyword">import</span> get_mobilenet_encoder</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> keras_segmentation.models.model_utils <span class="keyword">import</span> get_segmentation_model</span><br><span class="line"></span><br><span class="line">IMAGE_ORDERING = <span class="string">'channels_last'</span></span><br><span class="line">MERGE_AXIS = <span class="number">-1</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">resize_image</span><span class="params">( inp ,  s , data_format )</span>:</span></span><br><span class="line">	<span class="keyword">import</span> tensorflow <span class="keyword">as</span> tf</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> Lambda( </span><br><span class="line">		<span class="keyword">lambda</span> x: tf.image.resize_images(</span><br><span class="line">			x , ( K.int_shape(x)[<span class="number">1</span>]*s[<span class="number">0</span>] ,K.int_shape(x)[<span class="number">2</span>]*s[<span class="number">1</span>] ))  </span><br><span class="line">		)( inp )</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">pool_block</span><span class="params">( feats , pool_factor )</span>:</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> IMAGE_ORDERING == <span class="string">'channels_first'</span>:</span><br><span class="line">		h = K.int_shape( feats )[<span class="number">2</span>]</span><br><span class="line">		w = K.int_shape( feats )[<span class="number">3</span>]</span><br><span class="line">	<span class="keyword">elif</span> IMAGE_ORDERING == <span class="string">'channels_last'</span>:</span><br><span class="line">		h = K.int_shape( feats )[<span class="number">1</span>]</span><br><span class="line">		w = K.int_shape( feats )[<span class="number">2</span>]</span><br><span class="line"></span><br><span class="line">	<span class="comment"># strides = [18,18],[9,9],[6,6],[3,3]</span></span><br><span class="line">	pool_size = strides = [int(np.round( float(h) /  pool_factor)), int(np.round(  float(w )/  pool_factor))]</span><br><span class="line"> </span><br><span class="line">	<span class="comment"># 进行不同程度的平均</span></span><br><span class="line">	x = AveragePooling2D(pool_size , data_format=IMAGE_ORDERING , strides=strides, padding=<span class="string">'same'</span>)( feats )</span><br><span class="line">	</span><br><span class="line">	<span class="comment"># 进行卷积</span></span><br><span class="line">	x = Conv2D(<span class="number">512</span>, (<span class="number">1</span> ,<span class="number">1</span> ), data_format=IMAGE_ORDERING , padding=<span class="string">'same'</span> , use_bias=<span class="literal">False</span> )( x )</span><br><span class="line">	x = BatchNormalization()(x)</span><br><span class="line">	x = Activation(<span class="string">'relu'</span> )(x)</span><br><span class="line"></span><br><span class="line">	x = resize_image( x , strides , data_format=IMAGE_ORDERING ) </span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> x</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">_pspnet</span><span class="params">( n_classes , encoder ,  input_height=<span class="number">384</span>, input_width=<span class="number">576</span>  )</span>:</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">assert</span> input_height%<span class="number">192</span> == <span class="number">0</span></span><br><span class="line">	<span class="keyword">assert</span> input_width%<span class="number">192</span> == <span class="number">0</span></span><br><span class="line"></span><br><span class="line">	img_input , levels = encoder( input_height=input_height,input_width=input_width)</span><br><span class="line">	[f1 , f2 , f3 , f4 , f5 ] = levels </span><br><span class="line"></span><br><span class="line">	o = f5</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 对f5进行不同程度的池化</span></span><br><span class="line">	pool_factors = [ <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">6</span>]</span><br><span class="line">	pool_outs = [o ]</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> p <span class="keyword">in</span> pool_factors:</span><br><span class="line">		pooled = pool_block(  o , p  )</span><br><span class="line">		pool_outs.append( pooled )</span><br><span class="line">	</span><br><span class="line">	<span class="comment"># 连接</span></span><br><span class="line">	o = Concatenate( axis=MERGE_AXIS)(pool_outs )</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 卷积</span></span><br><span class="line">	o = Conv2D(<span class="number">512</span>, (<span class="number">1</span>,<span class="number">1</span>), data_format=IMAGE_ORDERING, use_bias=<span class="literal">False</span> )(o)</span><br><span class="line">	o = BatchNormalization()(o)</span><br><span class="line">	o = Activation(<span class="string">'relu'</span> )(o)</span><br><span class="line"></span><br><span class="line">	<span class="comment"># 此时输出为[144,144,nclasses]</span></span><br><span class="line">	o = Conv2D( n_classes,(<span class="number">3</span>,<span class="number">3</span>),data_format=IMAGE_ORDERING, padding=<span class="string">'same'</span> )(o)</span><br><span class="line">	o = resize_image(o,(<span class="number">8</span>,<span class="number">8</span>),data_format=IMAGE_ORDERING)</span><br><span class="line">	o = Reshape((<span class="number">-1</span>,n_classes))(o)</span><br><span class="line">	o = Softmax()(o)</span><br><span class="line">	model = Model(img_input,o)</span><br><span class="line">	<span class="keyword">return</span> model</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">mobilenet_pspnet</span><span class="params">( n_classes ,  input_height=<span class="number">224</span>, input_width=<span class="number">224</span> )</span>:</span></span><br><span class="line"></span><br><span class="line">	model =  _pspnet( n_classes , get_mobilenet_encoder ,  input_height=input_height, input_width=input_width  )</span><br><span class="line">	model.model_name = <span class="string">"mobilenet_pspnet"</span></span><br><span class="line">	<span class="keyword">return</span> model</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是<strong>Pspnet中输入图像为576 x 576，不同于Segnet和Unet的416 x 416</strong></p>
+<p>所以提取出的f5为 18 x 18 x 1024，也就是上边所举的例子</p>
+<ul>
+<li>通过不同程度的池化，每一种池化输出为18 x 18 x512</li>
+<li><strong>4种池化的结果加上自己本身f5进行拼接</strong>，输出为 18 x 18 x 2560</li>
+<li>再通过卷积调整通道数为512，输出为 18 x 18 x 512</li>
+<li>再通过卷积<strong>调整通道数</strong>为nclasses准备softmax计算概率</li>
+<li>18 x 18太小 ，还需要<strong>恢复分辨率大小，使用resize调整分辨率大小</strong>，即8倍的宽高</li>
+<li>之后就是经典的softmax预测工作</li>
+</ul>
+<h4 id="Pspnet小结"><a href="#Pspnet小结" class="headerlink" title="Pspnet小结"></a>Pspnet小结</h4><p>重点在于核心结构Psp_block，<strong>对Encoder后的特征层进行不同程度的池化，再拼接</strong>，再恢复调整分辨率与通道数</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2/" rel="tag"># 语义分割</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/" rel="prev" title="Hexo基本操作">
+      <i class="fa fa-chevron-left"></i> Hexo基本操作
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是语义分割"><span class="nav-number">1.</span> <span class="nav-text">什么是语义分割</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#语义分割模型"><span class="nav-number">2.</span> <span class="nav-text">语义分割模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Segnet模型"><span class="nav-number">2.1.</span> <span class="nav-text">Segnet模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简述Segnet"><span class="nav-number">2.1.0.1.</span> <span class="nav-text">简述Segnet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Encoder模块——Mobilenet网络结构"><span class="nav-number">2.1.0.2.</span> <span class="nav-text">Encoder模块——Mobilenet网络结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Encoder代码（Mobilenet结构）"><span class="nav-number">2.1.0.3.</span> <span class="nav-text">Encoder代码（Mobilenet结构）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Decoder模块"><span class="nav-number">2.1.0.4.</span> <span class="nav-text">Decoder模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Decoder代码"><span class="nav-number">2.1.0.5.</span> <span class="nav-text">Decoder代码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Segnet小结"><span class="nav-number">2.1.0.6.</span> <span class="nav-text">Segnet小结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Unet模型"><span class="nav-number">2.2.</span> <span class="nav-text">Unet模型</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简述Unet"><span class="nav-number">2.2.0.1.</span> <span class="nav-text">简述Unet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Encoder模块"><span class="nav-number">2.2.0.2.</span> <span class="nav-text">Encoder模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Decoder模块-1"><span class="nav-number">2.2.0.3.</span> <span class="nav-text">Decoder模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Unet小结"><span class="nav-number">2.2.0.4.</span> <span class="nav-text">Unet小结</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Pspnet"><span class="nav-number">2.3.</span> <span class="nav-text">Pspnet</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简述-Pspnet"><span class="nav-number">2.3.0.1.</span> <span class="nav-text">简述 Pspnet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Encoder模块-1"><span class="nav-number">2.3.0.2.</span> <span class="nav-text">Encoder模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Decoder模块-2"><span class="nav-number">2.3.0.3.</span> <span class="nav-text">Decoder模块</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Pspnet小结"><span class="nav-number">2.3.0.4.</span> <span class="nav-text">Pspnet小结</span></a></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="南华"
+      src="/images/touxiang.jpg">
+  <p class="site-author-name" itemprop="name">南华</p>
+  <div class="site-description" itemprop="description">一条该，从技术延申至生活</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Whiteleaf3er" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Whiteleaf3er" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/784056528@qq.com" title="E-Mail → 784056528@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/liu-hao-33-54" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;liu-hao-33-54" rel="noopener" target="_blank"><i class="fa fa-fw fa-instagram"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">南华</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">14k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">12 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    url = encodeURI(url);
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+              leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              })
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : 'c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz',
+            'X-LC-Key'    : 'Vjdsl89qLL8cdlQ8COrOi7pI',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz',
+      appKey     : 'Vjdsl89qLL8cdlQ8COrOi7pI',
+      placeholder: "说你所说",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-CN' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
