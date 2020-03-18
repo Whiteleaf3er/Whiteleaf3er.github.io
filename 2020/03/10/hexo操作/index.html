@@ -29,7 +29,7 @@
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/smshen/MarkdownPhotos/master/Res/test.jpg">
 <meta property="article:published_time" content="2020-03-10T07:00:55.000Z">
-<meta property="article:modified_time" content="2020-03-11T02:33:54.721Z">
+<meta property="article:modified_time" content="2020-03-18T03:49:06.728Z">
 <meta property="article:author" content="南华">
 <meta property="article:tag" content="-hexo -md">
 <meta name="twitter:card" content="summary">
@@ -255,14 +255,14 @@
                 <i class="fa fa-file-word-o"></i>
               </span>
                 <span class="post-meta-item-text">本文字数：</span>
-              <span>1.1k</span>
+              <span>3.3k</span>
             </span>
             <span class="post-meta-item" title="阅读时长">
               <span class="post-meta-item-icon">
                 <i class="fa fa-clock-o"></i>
               </span>
                 <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
+              <span>3 分钟</span>
             </span>
 
         </div>
@@ -327,8 +327,45 @@
 <hr>
 <h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>链接的文字放在[]中，链接地址放在随后的（）中<br><a href="https://www.zhihu.com/people/liu-hao-33-54" target="_blank" rel="noopener">我的知乎</a></p>
 <h4 id="图片"><a href="#图片" class="headerlink" title="图片"></a>图片</h4><p>与链接基本一致，加入！即可<br><img src="https://raw.githubusercontent.com/smshen/MarkdownPhotos/master/Res/test.jpg" alt="微信"></p>
+<p>但是如果为本地图片地址，采取如下的方式：</p>
+<h6 id="第一种方法"><a href="#第一种方法" class="headerlink" title="第一种方法"></a>第一种方法</h6><ul>
+<li>在配置文件<strong>_config.yml</strong>里修改：<code>post_asset_folder: true</code></li>
+<li>在Hexo安装目录下执行:<code>npm install hexo-asset-image --save</code>，这是下载安装一个可以上传本地图片的插件</li>
+<li>等待一段时间之后，再运行<code>hexo n &quot;文章标题&quot;</code>来生成博文时，<code>/source/_post</code>文件夹中除了<code>文章标题.md</code>外，还有一个同名文件夹。</li>
+<li>在新的博文中想引入图片时，可以先把图片复制到博文的同名文件夹，然后在<code>.md</code>中按照常规的方式饮用图片即可，如<code>![你想输入的替代文字](博文标题/图片名.jpg)</code>。<strong>注意，此处的图片路径必须使用相对路径</strong></li>
+<li>执行<code>hexo g</code>,检查生成的页面中图片的src地址。此时生成页面中图片src地址应该与页面的相对路径一致（具体路径取决于页面路径格式设置）</li>
+</ul>
+<h6 id="第二种方法"><a href="#第二种方法" class="headerlink" title="第二种方法"></a>第二种方法</h6><p>以上方法可以解决本地图片上传和引用的问题，但是在每个文章下建立资源文件夹好处是分类清楚，缺点是图片复用不方便，也不符合网站设计的一般规范。</p>
+<p>所以我们可以第二种方案：</p>
+<ul>
+<li>在本地source中建立img文件夹，将引用到的图片全部放在此文件夹中。这样操作也便于图片的复用。</li>
+<li><strong>注意，采用这种方法时无需修改_config.yml,也无需安装hexo-asset-image</strong></li>
+</ul>
 <h4 id="强调"><a href="#强调" class="headerlink" title="强调"></a>强调</h4><p>*倾斜*<br>**加粗**<br>~~删除~~<br><em>倾斜</em><br><strong>加粗</strong><br><del>删除</del></p>
-<h4 id="转义"><a href="#转义" class="headerlink" title="转义"></a>转义</h4><p>和latex等都差不多，用\即可</p>
+<h4 id="公式-转义"><a href="#公式-转义" class="headerlink" title="公式/转义"></a>公式/转义</h4><p>转移和latex等都差不多，用\即可</p>
+<p>公式：</p>
+<p>在用markdown写技术文档时，免不了会碰到数学公式。常用的Markdown编辑器都会集成Mathjax，用来渲染文档中的类Latex格式书写的数学公式。基于Hexo搭建的个人博客，默认情况下渲染数学公式却会出现各种各样的问题。</p>
+<h6 id="原因"><a href="#原因" class="headerlink" title="原因"></a>原因</h6><p>Hexo 默认使用 hexo-renderer-marked 引擎渲染网页，该引擎会把一些特殊的 markdown 符号转换为相应的 html 标签，比如在 markdown 语法中，下划线<code>_</code>代表斜体，会被渲染引擎处理为``标签。</p>
+<p>因为类 Latex 格式书写的数学公式下划线<code>_</code>表示下标，有特殊的含义，如果被强制转换为``标签，那么 MathJax 引擎在渲染数学公式的时候就会出错。</p>
+<p>类似的语义冲突的符号还包括<code>*</code>, <code>{</code>, <code>}</code>, <code>\\</code>等。 </p>
+<h6 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h6><p>更换 Hexo 的 markdown 渲染引擎，hexo-renderer-kramed 引擎是在默认的渲染引擎 hexo-renderer-marked 的基础上修改了一些 bug ，两者比较接近，也比较轻量级。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">npm <span class="keyword">uninstall</span> hexo-renderer-marked <span class="comment">--save</span></span><br><span class="line">npm <span class="keyword">install</span> hexo-renderer-kramed <span class="comment">--save1212</span></span><br></pre></td></tr></table></figure>
+
+<p>执行上面的命令即可，先卸载原来的渲染引擎，再安装新的。<br>然后，跟换引擎后行间公式可以正确渲染了，但是这样还没有完全解决问题，行内公式的渲染还是有问题，因为 hexo-renderer-kramed 引擎也有语义冲突的问题。接下来到博客根目录下，找到node_modules\kramed\lib\rules\inline.js，把第11行的 escape 变量的值做相应的修改：</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//escape: /^\\([<span class="string">\\`*&#123;&#125;\[\</span>](<span class="link"></span>)#$+\-.!_&gt;])/,</span><br><span class="line">escape: /^\\([<span class="string">`*\[\</span>](<span class="link"></span>)#$+\-.!_&gt;])/,1212</span><br></pre></td></tr></table></figure>
+
+<p>这一步是在原基础上取消了对,{,}的转义(escape)。<br>同时把第20行的em变量也要做相应的修改。</p>
+<figure class="highlight markdown"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">//em: /^\b<span class="emphasis">_((?:_</span><span class="emphasis">_|[\s\S])+?)_</span>\b|^\<span class="emphasis">*((?:\*</span>\<span class="emphasis">*|[\s\S])+?)\*</span>(?!\*)/,</span><br><span class="line">em: /^\<span class="emphasis">*((?:\*</span>\<span class="emphasis">*|[\s\S])+?)\*</span>(?!\*)/,1212</span><br></pre></td></tr></table></figure>
+
+<p>重新启动hexo（先clean再generate）,问题完美解决。哦，如果不幸还没解决的话，看看是不是还需要在使用的主题中配置mathjax开关。</p>
+<h6 id="在-Next-主题中开启-MathJax-开关"><a href="#在-Next-主题中开启-MathJax-开关" class="headerlink" title="在 Next 主题中开启 MathJax 开关"></a>在 Next 主题中开启 MathJax 开关</h6><p>如何使用了主题了，别忘了在主题（Theme）中开启 MathJax 开关，下面以 next 主题为例，介绍下如何打开 MathJax 开关。</p>
+<p>进入到主题目录，找到 _config.yml 配置问题，把 math 默认的 false 修改为true，具体如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># Math Equations Render Support</span></span><br><span class="line"><span class="attr">math:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># Default(true) will load mathjax/katex script on demand</span></span><br><span class="line">  <span class="comment"># That is it only render those page who has 'mathjax: true' in Front Matter.</span></span><br><span class="line">  <span class="comment"># If you set it to false, it will load mathjax/katex srcipt EVERY PAGE.</span></span><br><span class="line">  <span class="attr">per_page:</span> <span class="literal">true</span></span><br><span class="line"></span><br><span class="line">  <span class="attr">engine:</span> <span class="string">mathjax</span></span><br><span class="line">  <span class="comment">#engine: katex12345678910111234567891011</span></span><br></pre></td></tr></table></figure>
+
+<p>还需要在文章的Front-matter里打开mathjax开关，如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">---</span></span><br><span class="line"><span class="attr">title:</span> <span class="string">index.html</span></span><br><span class="line"><span class="attr">date:</span> <span class="number">2018</span><span class="number">-07</span><span class="number">-05</span> <span class="number">12</span><span class="string">:01:30</span></span><br><span class="line"><span class="attr">tags:</span></span><br><span class="line"><span class="attr">mathjax:</span> <span class="literal">true</span></span><br><span class="line"><span class="string">--123456123456</span></span><br></pre></td></tr></table></figure>
+
+<p>之所以要在文章头里设置开关，是因为考虑只有在用到公式的页面才加载 Mathjax，这样不需要渲染数学公式的页面的访问速度就不会受到影响了。</p>
 <h4 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h4><p>如果代码量比较少，只有单行的话，可以用单反引号包起来，如下：<br><code>asd</code><br>如果多行就用</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> main&#123;</span><br><span class="line">	<span class="built_in">vector</span>&lt;<span class="keyword">int</span>&gt; temp;</span><br><span class="line">	<span class="comment">//...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
     </div>
@@ -417,7 +454,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hexo添加menu中的分类-标签等"><span class="nav-number">1.</span> <span class="nav-text">Hexo添加menu中的分类&#x2F;标签等</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#发布博文"><span class="nav-number">2.</span> <span class="nav-text">发布博文</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常用的MD语法"><span class="nav-number">3.</span> <span class="nav-text">常用的MD语法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#标记与多重标记"><span class="nav-number">3.0.1.</span> <span class="nav-text">标记与多重标记</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多级标题"><span class="nav-number">3.0.2.</span> <span class="nav-text">多级标题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#列表"><span class="nav-number">3.0.3.</span> <span class="nav-text">列表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分割线"><span class="nav-number">3.0.4.</span> <span class="nav-text">分割线</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#链接"><span class="nav-number">3.0.5.</span> <span class="nav-text">链接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#图片"><span class="nav-number">3.0.6.</span> <span class="nav-text">图片</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#强调"><span class="nav-number">3.0.7.</span> <span class="nav-text">强调</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#转义"><span class="nav-number">3.0.8.</span> <span class="nav-text">转义</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#代码"><span class="nav-number">3.0.9.</span> <span class="nav-text">代码</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hexo添加menu中的分类-标签等"><span class="nav-number">1.</span> <span class="nav-text">Hexo添加menu中的分类&#x2F;标签等</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#发布博文"><span class="nav-number">2.</span> <span class="nav-text">发布博文</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常用的MD语法"><span class="nav-number">3.</span> <span class="nav-text">常用的MD语法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#标记与多重标记"><span class="nav-number">3.0.1.</span> <span class="nav-text">标记与多重标记</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#多级标题"><span class="nav-number">3.0.2.</span> <span class="nav-text">多级标题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#列表"><span class="nav-number">3.0.3.</span> <span class="nav-text">列表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#分割线"><span class="nav-number">3.0.4.</span> <span class="nav-text">分割线</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#链接"><span class="nav-number">3.0.5.</span> <span class="nav-text">链接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#图片"><span class="nav-number">3.0.6.</span> <span class="nav-text">图片</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#第一种方法"><span class="nav-number">3.0.6.0.1.</span> <span class="nav-text">第一种方法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#第二种方法"><span class="nav-number">3.0.6.0.2.</span> <span class="nav-text">第二种方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#强调"><span class="nav-number">3.0.7.</span> <span class="nav-text">强调</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#公式-转义"><span class="nav-number">3.0.8.</span> <span class="nav-text">公式&#x2F;转义</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#原因"><span class="nav-number">3.0.8.0.1.</span> <span class="nav-text">原因</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#解决方法"><span class="nav-number">3.0.8.0.2.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#在-Next-主题中开启-MathJax-开关"><span class="nav-number">3.0.8.0.3.</span> <span class="nav-text">在 Next 主题中开启 MathJax 开关</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#代码"><span class="nav-number">3.0.9.</span> <span class="nav-text">代码</span></a></li></ol></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -433,7 +470,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">4</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -494,12 +531,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">14k</span>
+    <span title="站点总字数">16k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">12 分钟</span>
+    <span title="站点阅读时长">14 分钟</span>
 </div>
 
         
