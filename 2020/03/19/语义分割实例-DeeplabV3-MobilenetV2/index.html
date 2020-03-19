@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Gemini","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="简介本篇文章主要通过DeeplabV3-MobilenetV2对VOC21分类数据集进行语义分割 网络结构可参考上一篇综述中的Deeplab部分，此篇文章主要介绍通用的数据集状况以及训练流程">
+<meta property="og:type" content="article">
+<meta property="og:title" content="语义分割实例-DeeplabV3-MobilenetV2">
+<meta property="og:url" content="http://yoursite.com/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/index.html">
+<meta property="og:site_name" content="南华街617号">
+<meta property="og:description" content="简介本篇文章主要通过DeeplabV3-MobilenetV2对VOC21分类数据集进行语义分割 网络结构可参考上一篇综述中的Deeplab部分，此篇文章主要介绍通用的数据集状况以及训练流程">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319164202932.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319170205592.png">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319170242538.png">
+<meta property="article:published_time" content="2020-03-19T08:12:08.000Z">
+<meta property="article:modified_time" content="2020-03-19T09:47:30.599Z">
+<meta property="article:author" content="南华">
+<meta property="article:tag" content="语义分割">
+<meta property="article:tag" content="Deeplab">
+<meta property="article:tag" content="Mobilenet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319164202932.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>语义分割实例-DeeplabV3-MobilenetV2 | 南华街617号</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">南华街617号</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">七栋一单元11-2</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+      <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+  </div>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/touxiang.jpg">
+      <meta itemprop="name" content="南华">
+      <meta itemprop="description" content="一条该，从技术延申至生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="南华街617号">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          语义分割实例-DeeplabV3-MobilenetV2
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-19 16:12:08" itemprop="dateCreated datePublished" datetime="2020-03-19T16:12:08+08:00">2020-03-19</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BB%B4%E6%BB%B4%E5%AE%9E%E4%B9%A0-%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2/" itemprop="url" rel="index"><span itemprop="name">滴滴实习-语义分割</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/" class="post-meta-item leancloud_visitors" data-flag-title="语义分割实例-DeeplabV3-MobilenetV2" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.2k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>本篇文章主要通过<strong>DeeplabV3-MobilenetV2对VOC21</strong>分类数据集进行语义分割</p>
+<p>网络结构可参考上一篇综述中的Deeplab部分，此篇文章主要介绍通用的数据集状况以及训练流程</p>
+<a id="more"></a>
+
+<h2 id="数据集"><a href="#数据集" class="headerlink" title="数据集"></a>数据集</h2><h4 id="VOC数据集"><a href="#VOC数据集" class="headerlink" title="VOC数据集"></a>VOC数据集</h4><p>包括背景一共21个类别</p>
+<p>dataset2文件夹中包括3个文件：</p>
+<blockquote>
+<p>dataset2 </p>
+<blockquote>
+<p>jpg -原图，未经处理，分辨率大小不统一</p>
+</blockquote>
+<blockquote>
+<p>png - 打了标签后的图像，分辨率500 x 375 ， 依然不满足分辨率要求</p>
+</blockquote>
+<blockquote>
+<p>train_data.txt</p>
+</blockquote>
+</blockquote>
+<p>train-data.txt文件如图，存储的是原图和标签的文件名</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319164202932.png" alt="image-20200319164202932"></p>
+<h4 id="数据预处理"><a href="#数据预处理" class="headerlink" title="数据预处理"></a>数据预处理</h4><p>两个问题</p>
+<p>第一个是分辨率不同，如何统一到需要的输入512 x 512</p>
+<p>第二个是数据不经处理模型鲁棒性较低，如何使原始数据所含特征更加丰富</p>
+<p>对于第一个问题，很容易想到直接resize((w,h))，但是问题出现了，直接拉伸收缩，图像会出现扭曲和失真，所以还需要点技巧是填补，在上下或左右填补黑色，来使最终分辨率统一</p>
+<p>比如原图分辨率为256 x 128，通过第四行得到scale = 2，nw x nh = 512 x 256，先resize到nw x nh的状态，此时虽然不满足512 x 512，但是W已经满足了，只不过H高度矮了点，重点是没有失真，那么将矮的少的那一部分用黑色填充即可</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">letterbox_image</span><span class="params">(image, size, type)</span>:</span></span><br><span class="line">    iw, ih = image.size</span><br><span class="line">    w, h = size</span><br><span class="line">    scale = min(w/iw, h/ih)</span><br><span class="line">    nw = int(iw*scale)</span><br><span class="line">    nh = int(ih*scale)</span><br><span class="line">    </span><br><span class="line">    image = image.resize((nw,nh), Image.NEAREST)</span><br><span class="line">    <span class="keyword">if</span>(type==<span class="string">"jpg"</span>):</span><br><span class="line">        new_image = Image.new(<span class="string">'RGB'</span>, size, (<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>))</span><br><span class="line">    <span class="keyword">elif</span>(type==<span class="string">"png"</span>):</span><br><span class="line">        new_image = Image.new(<span class="string">'RGB'</span>, size, (<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>))</span><br><span class="line">    new_image.paste(image, ((w-nw)//<span class="number">2</span>, (h-nh)//<span class="number">2</span>))</span><br><span class="line">    <span class="keyword">return</span> new_image,nw,nh</span><br></pre></td></tr></table></figure>
+
+<p>第13行：后两个参数表示贴上去贴在哪——所贴位置的左上角</p>
+<p>效果图是这样的：</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319170205592.png" alt="image-20200319170205592"></p>
+<p>接下来解决第二个问题，答案是数据增强，也就是增加一些噪声，比如颜色变，翻转，缩放等等</p>
+<p>看看效果图</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200319170242538.png" alt="image-20200319170242538"></p>
+<p>前16行通过双三次插值(Image.BICUBIC)调整到随机选定的缩放比例H x W</p>
+<p>17-25行随机贴到全黑的图中</p>
+<p>26-31行随机翻转图像，左右翻转即镜像</p>
+<p>最后在rgb转化为hsv，随机加噪声造成图像扭曲</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">get_random_data</span><span class="params">(image, label, input_shape, jitter=<span class="number">.2</span>, hue=<span class="number">.2</span>, sat=<span class="number">1.1</span>, val=<span class="number">1.1</span>)</span>:</span></span><br><span class="line">    h, w = input_shape</span><br><span class="line"></span><br><span class="line">    <span class="comment"># resize image</span></span><br><span class="line">    rand_jit1 = rand(<span class="number">1</span>-jitter,<span class="number">1</span>+jitter) <span class="comment">#0.8-1.2</span></span><br><span class="line">    rand_jit2 = rand(<span class="number">1</span>-jitter,<span class="number">1</span>+jitter)</span><br><span class="line">    new_ar = w/h * rand_jit1/rand_jit2</span><br><span class="line">    scale = rand(<span class="number">.6</span>, <span class="number">1.4</span>)</span><br><span class="line">    <span class="keyword">if</span> new_ar &lt; <span class="number">1</span>:</span><br><span class="line">        nh = int(scale*h)</span><br><span class="line">        nw = int(nh*new_ar)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        nw = int(scale*w)</span><br><span class="line">        nh = int(nw/new_ar)</span><br><span class="line">    image = image.resize((nw,nh), Image.BICUBIC)</span><br><span class="line">    label = label.resize((nw,nh), Image.BICUBIC)</span><br><span class="line">    <span class="comment"># place image</span></span><br><span class="line">    dx = int(rand(<span class="number">0</span>, w-nw))</span><br><span class="line">    dy = int(rand(<span class="number">0</span>, h-nh))</span><br><span class="line">    new_image = Image.new(<span class="string">'RGB'</span>, (w,h), (<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>))</span><br><span class="line">    new_label = Image.new(<span class="string">'RGB'</span>, (w,h), (<span class="number">0</span>,<span class="number">0</span>,<span class="number">0</span>)) <span class="comment">#生成全黑的图</span></span><br><span class="line">    new_image.paste(image, (dx, dy)) <span class="comment"># 随机贴上去</span></span><br><span class="line">    new_label.paste(label, (dx, dy))</span><br><span class="line">    image = new_image</span><br><span class="line">    label = new_label</span><br><span class="line">    <span class="comment"># flip image or not</span></span><br><span class="line">    flip = rand()&lt;<span class="number">.5</span></span><br><span class="line">    <span class="keyword">if</span> flip: </span><br><span class="line">        image = image.transpose(Image.FLIP_LEFT_RIGHT)</span><br><span class="line">        label = label.transpose(Image.FLIP_LEFT_RIGHT)</span><br><span class="line"></span><br><span class="line">    <span class="comment"># distort image</span></span><br><span class="line">    hue = rand(-hue, hue)</span><br><span class="line">    sat = rand(<span class="number">1</span>, sat) <span class="keyword">if</span> rand()&lt;<span class="number">.5</span> <span class="keyword">else</span> <span class="number">1</span>/rand(<span class="number">1</span>, sat)</span><br><span class="line">    val = rand(<span class="number">1</span>, val) <span class="keyword">if</span> rand()&lt;<span class="number">.5</span> <span class="keyword">else</span> <span class="number">1</span>/rand(<span class="number">1</span>, val)</span><br><span class="line">    x = rgb_to_hsv(np.array(image)/<span class="number">255.</span>)</span><br><span class="line">    x[..., <span class="number">0</span>] += hue</span><br><span class="line">    x[..., <span class="number">0</span>][x[..., <span class="number">0</span>]&gt;<span class="number">1</span>] -= <span class="number">1</span></span><br><span class="line">    x[..., <span class="number">0</span>][x[..., <span class="number">0</span>]&lt;<span class="number">0</span>] += <span class="number">1</span></span><br><span class="line">    x[..., <span class="number">1</span>] *= sat</span><br><span class="line">    x[..., <span class="number">2</span>] *= val</span><br><span class="line">    x[x&gt;<span class="number">1</span>] = <span class="number">1</span></span><br><span class="line">    x[x&lt;<span class="number">0</span>] = <span class="number">0</span></span><br><span class="line">    image_data = hsv_to_rgb(x)</span><br><span class="line">    <span class="keyword">return</span> image_data,label</span><br></pre></td></tr></table></figure>
+
+<h2 id="训练-train-py"><a href="#训练-train-py" class="headerlink" title="训练-train.py"></a>训练-train.py</h2><ol>
+<li><p>获取model ， model = Deeplabv3()</p>
+</li>
+<li><p>获取权重参数 </p>
+<figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">weights_path = get<span class="constructor">_file()</span></span><br><span class="line">model.load<span class="constructor">_weights(<span class="params">weight_path</span>)</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>初步获取数据集，打开txt文件</p>
+<p>with open() as f:</p>
+<p>​    lines = f.readlines()</p>
+</li>
+<li><p>打乱行，划分训练集和验证集</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">np</span><span class="selector-class">.random</span><span class="selector-class">.seed</span>(10101)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">np</span><span class="selector-class">.random</span><span class="selector-class">.shuffle</span>(<span class="selector-tag">lines</span>)</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="5">
+<li><p>保存CKPT的方式，隔几代保存一次</p>
+<p>checkpoint_period = ModelCheckpoint()</p>
+</li>
+<li><p>学习率下降的方式，要考虑到前期大学习率，后期小学习率兼顾效率和效果，什么时候下降，一种方式是val_loss两次不下降就降低学习率来更细致的Train<br>reduce_lr = ReduceLROnPlateau()</p>
+</li>
+<li><p>早停,一种情况是val_loss几次不下降就说明训练OK了<br>early_stopping = EarlyStopping()</p>
+</li>
+<li><p>损失函数定义<br>K.binary_crossentropy()</p>
+</li>
+<li><p>优化器，其实compile时有一个参数就需要指定优化器</p>
+   <figure class="highlight nix"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">model.compile(<span class="attr">loss</span> = loss,</span><br><span class="line">      <span class="attr">optimizer</span> = Adam(<span class="attr">lr=1e-3),</span></span><br><span class="line">      <span class="attr">metrics</span> = ['accuracy'])</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="10">
+<li><p>开始训练</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">model.fit_generator(generate_arrays_from_file(lines[:num_train], batch_size),</span><br><span class="line">        steps_per_epoch=max(<span class="number">1</span>, num_train//batch_size),</span><br><span class="line">        validation_data=generate_arrays_from_file(lines[num_train:], batch_size),</span><br><span class="line">        validation_steps=max(<span class="number">1</span>, num_val//batch_size),</span><br><span class="line">        epochs=<span class="number">30</span>,</span><br><span class="line">        initial_epoch=<span class="number">0</span>,</span><br><span class="line">        callbacks=[checkpoint_period, reduce_lr, early_stopping])</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>保存权重h5文件</p>
+<p>model.save_weights（）</p>
+</li>
+</ol>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>其实可以发现，通过model（）封装后，语义分割模型和图像分类主干代码基本一致，训练流程也无所差距</p>
+
+    </div>
+
+    
+    
+    
+      
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2/" rel="tag"># 语义分割</a>
+              <a href="/tags/Deeplab/" rel="tag"># Deeplab</a>
+              <a href="/tags/Mobilenet/" rel="tag"># Mobilenet</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/10/hexo%E6%93%8D%E4%BD%9C/" rel="prev" title="Hexo基本操作">
+      <i class="fa fa-chevron-left"></i> Hexo基本操作
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据集"><span class="nav-number">2.</span> <span class="nav-text">数据集</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#VOC数据集"><span class="nav-number">2.0.1.</span> <span class="nav-text">VOC数据集</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#数据预处理"><span class="nav-number">2.0.2.</span> <span class="nav-text">数据预处理</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#训练-train-py"><span class="nav-number">3.</span> <span class="nav-text">训练-train.py</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小结"><span class="nav-number">4.</span> <span class="nav-text">小结</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="南华"
+      src="/images/touxiang.jpg">
+  <p class="site-author-name" itemprop="name">南华</p>
+  <div class="site-description" itemprop="description">一条该，从技术延申至生活</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Whiteleaf3er" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Whiteleaf3er" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/784056528@qq.com" title="E-Mail → 784056528@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/liu-hao-33-54" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;liu-hao-33-54" rel="noopener" target="_blank"><i class="fa fa-fw fa-instagram"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">南华</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">7k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    url = encodeURI(url);
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              })
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : 'c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz',
+            'X-LC-Key'    : 'Vjdsl89qLL8cdlQ8COrOi7pI',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz',
+      appKey     : 'Vjdsl89qLL8cdlQ8COrOi7pI',
+      placeholder: "说你所说",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-CN' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>

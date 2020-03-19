@@ -204,15 +204,15 @@
 
       <div class="post-meta">
         <time itemprop="dateCreated"
-              datetime="2020-03-17T20:16:13+08:00"
-              content="2020-03-17">
-          03-17
+              datetime="2020-03-19T16:12:08+08:00"
+              content="2020-03-19">
+          03-19
         </time>
       </div>
 
       <h2 class="post-title">
-          <a class="post-title-link" href="/2020/03/17/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%BC%E8%BF%B0/" itemprop="url">
-            <span itemprop="name">语义分割综述</span>
+          <a class="post-title-link" href="/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/" itemprop="url">
+            <span itemprop="name">语义分割实例-DeeplabV3-MobilenetV2</span>
           </a>
       </h2>
 
@@ -305,7 +305,7 @@
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -353,12 +353,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-area-chart"></i>
     </span>
-    <span title="站点总字数">29k</span>
+    <span title="站点总字数">7k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">26 分钟</span>
+    <span title="站点阅读时长">6 分钟</span>
 </div>
 
         
@@ -384,9 +384,11 @@
         .then(({ results }) => {
           if (results.length > 0) {
             var counter = results[0];
-              leancloudSelector(url).innerText = counter.time + 1;
             Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
               .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
               .catch(error => {
                 console.error('Failed to save visitor count', error);
               })
