@@ -1,6 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>图像语义分割经典结构</title>
+    <url>/2020/03/20/%E5%9B%BE%E5%83%8F%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%8F%E5%85%B8%E7%BB%93%E6%9E%84/</url>
+    <content><![CDATA[<h2 id="文章简介"><a href="#文章简介" class="headerlink" title="文章简介"></a>文章简介</h2><p>在<a href="http://nanhua.space/2020/03/17/语义分割综述/#more" target="_blank" rel="noopener">语义分割综述</a>里其实已经介绍了，但是，那篇文章介绍比较详细，也贴了一些代码，统筹总局不够清晰明了，所以决定再理一下。</p>
+<p>当然，可以预见的是，这个方向的内容自己还没入门，属于探索阶段的整理，所以之后肯定还会有带有自我实践理解的总结性的这样一篇综述的</p>
+<h2 id="语义分割Idea"><a href="#语义分割Idea" class="headerlink" title="语义分割Idea"></a>语义分割Idea</h2><p>传统的图像识别分类网络最后往往是通过全连接层shape为1维即<strong>1 x Nclasses</strong>的向量再进行图像分类工作。语义分割又称密集预测，像素级别的预测，那么最后的<strong>输出一定是H’*W’ x Nclasses</strong>，也就是每个点都进行了各自的预测工作。</p>
+<ul>
+<li>那么一个想法就油然而生了，<strong>全连接层替换掉</strong>不就可以了吗？</li>
+<li>但还有需要考虑的，通常卷积过后图像分辨率降低或保持不变（取决于步长），通道数增加，在卷积层的输出后改变通道数容易，也使用卷积就可以达到目的，<strong>分辨率如何恢复</strong>到原图或较大分辨率的状态呢？也就是如何进行上采样呢？</li>
+<li>继续考虑，如果上采样问题解决了，这样利用到的仅仅是多次卷积后的最后输出特征，较深层的特征，<strong>浅层的特征图</strong>能不能利用起来呢？</li>
+</ul>
+<p>这三个点其实很容易想到，那么我们从第一个点直接进入图像语义分割领域开山之作——FCN</p>
+<h2 id="FCN（CVPR2015）"><a href="#FCN（CVPR2015）" class="headerlink" title="FCN（CVPR2015）"></a>FCN（CVPR2015）</h2><p>第一篇论文提出的FCN其实就已经考虑到了我们想到的3个idea，话不多说，直接看FCN的三个主要特征：</p>
+<h4 id="卷积替代全连接"><a href="#卷积替代全连接" class="headerlink" title="卷积替代全连接"></a>卷积替代全连接</h4><p>如图所示，像 <code>VGG16</code> 分类网络的全连接层（<code>fc6</code>，<code>fc7</code>）被转换为全卷积层。生成了一个<strong>低分辨率</strong>的类的热图</p>
+<p><img src="https://pic3.zhimg.com/80/42d85c5f7ddcb3f527666b250f62f5d6_1440w.png" alt=""></p>
+<p>通过这一步，Encoder成型</p>
+<h4 id="上采样"><a href="#上采样" class="headerlink" title="上采样"></a>上采样</h4><p>然后使用经双线性插值初始化的<strong>反卷积</strong>，<strong>提高图像分辨率</strong></p>
+<h4 id="融合多层特征"><a href="#融合多层特征" class="headerlink" title="融合多层特征"></a>融合多层特征</h4><p>在上采样的每一个阶段通过<strong>融合（简单地相加） <code>VGG16</code> 中的低层</strong>（<code>conv4</code>和<code>conv3</code>）的更加粗糙但是分辨率更高的特征图进一步<strong>细化特征</strong>，恢复在降低分辨率时损失的特征。</p>
+<p>在这里可以讨论一下<strong>池化</strong>，在Encoder时，池化增加感受野，降低分辨率，但也使得空间信息丢失（比如maxpool损失了部分背景信息），带步长的卷积同理。所以在Decoder使如何恢复这一部分信息是有必要的</p>
+<img src="https://pic2.zhimg.com/80/ccb6dd0a7f207134ae7690974c3e88a5_1440w.png" style="zoom: 80%;" />
+
+<p>看似3的idea都得到了处理，但有两点问题是很直接明显的</p>
+<ul>
+<li>上采样采取反卷积的形式，计算量消耗大</li>
+<li>特征融合有没有更有效的方式，也就是Decoder部分如何有效改进</li>
+</ul>
+<h2 id="Segnet（TPAMI-2015）"><a href="#Segnet（TPAMI-2015）" class="headerlink" title="Segnet（TPAMI 2015）"></a>Segnet（TPAMI 2015）</h2><p>Segnet是典型的Encoder-Decoder结构，其特殊之处主要在于<strong>上采样的方式</strong>（提取特征主要针对高层特征，其实这里还没有FCN做的好，没有融合低层特征）</p>
+<p><img src="https://pic1.zhimg.com/80/6cab0e3643d16ccab0a1bf1909813484_1440w.png" alt="img"></p>
+<h4 id="反池化上采样"><a href="#反池化上采样" class="headerlink" title="反池化上采样"></a>反池化上采样</h4><p>细节就是记录了池化时的位置信息，更好的保持高频信息的完整性，但<strong>也会忽略邻近的信息</strong>。</p>
+<p>一个很大的优势：参数量减少，不需要学习</p>
+<p><img src="https://img-blog.csdnimg.cn/20190325194741517.png" alt="img"></p>
+<p>问题：</p>
+<ul>
+<li>池化损失的邻近信息如何恢复？</li>
+<li>需要融合低特征吗？（其实融合低层特征也会恢复部分池化中损失的信息，因为低层特征还没被池化233）</li>
+</ul>
+<h2 id="Unet（MICCAI-2015）"><a href="#Unet（MICCAI-2015）" class="headerlink" title="Unet（MICCAI 2015）"></a>Unet（MICCAI 2015）</h2><p>一个很明显的trick，将<strong>Encoder</strong>的特征图<strong>拼接</strong>至每个阶段<strong>Decoder</strong>的上采样特征图。来自网络中较早层的跳跃连接（在下采样操作之前）<strong>提供必要的细节</strong>，以便为分割边界重建精确的形。这一个trick基本就对Segnet的问题提出了一个解决方案。</p>
+<p>还有一个细节是上采用采用的<strong>转置卷积（反卷积）</strong>，而不是Segnet提出的反池化（为什么呢？反池化不是参数量更少吗？猜测一下可能是因为实验结果中反卷积效果更好吧233）</p>
+<p><img src="https://img-blog.csdnimg.cn/20190325194852702.png" alt="img"></p>
+<p>FCN，Segnet，Unet，三种网络已经提出了许多trick来解决语义分割的问题，特别是针对以下问题</p>
+<ul>
+<li>编码时stride=2的Conv操作或池化操作后图像分辨率减少<strong>损失的信息如何恢复</strong>，特别是池化操作的邻近信息的恢复——反池化</li>
+<li>上采用如何减少参数计算量——反池化（当然看具体情况决定反池化还是反卷积）</li>
+<li>如何保留低层信息——融合拼接</li>
+</ul>
+<p>之后的语义分割网络结构创新点在哪呢？</p>
+<h2 id="DeepLab-v1（ICLR-2015）"><a href="#DeepLab-v1（ICLR-2015）" class="headerlink" title="DeepLab v1（ICLR 2015）"></a>DeepLab v1（ICLR 2015）</h2><p>deeplabv1的设计亮点：</p>
+<ul>
+<li>采用了空洞卷积。利用空洞卷积在不增加参数的情况下扩大了感受野的范围。</li>
+<li>CRF（条件随机场）的处理。CRF的后期处理可以恢复边界信息，更加准确的定位，更好的提升语义分割的准确率。</li>
+</ul>
+<p>这里要指出一个细节，也是为什么这里要引入空洞卷积：</p>
+<p>在FCN时有一个操作：为了防止输出的分辨率太小，作者对原图直接padding，但是后果是噪声的引入。所以要解决的问题是采取某种方式使<strong>分辨率不那么小</strong>，但还要考虑的地方是<strong>便于fine-tune</strong>，也就是网络结构和感受野的固定</p>
+<p>很简单的想法是减少池化层，但是这样改变结构就不能fine-tune了。DeepLab v1首先的想法是将池化的stride调整为1，这样自然便达到了分辨率保证的效果，但是改变stride后边层的<strong>感受野发生了变化</strong>。</p>
+<p>进而才提出了空洞卷积。如下图所示，（a）和（c）即为<strong>相同的感受野</strong>，Atrous Convolution（空洞卷积）使得模型感受野不变，从而可以fine-tune，保证输出结果的精细化。</p>
+<p><img src="https://pic3.zhimg.com/80/766fc04b86b72f7e09d8f8ff6cb648e2_1440w.png" alt=""></p>
+<h2 id="DeepLab-v2（TPAMI-2017）"><a href="#DeepLab-v2（TPAMI-2017）" class="headerlink" title="DeepLab v2（TPAMI 2017）"></a>DeepLab v2（TPAMI 2017）</h2><p>deeplabv2在v1的基础之上增加了ASPP(空洞空间金字塔池化)模块。如下图所示，通过<strong>不同尺度的空洞率（rate）</strong>来提取不同尺寸的特征，更好的融合不同的特征，达到更好的分割效果。</p>
+<p><img src="http://5b0988e595225.cdn.sohucs.com/images/20190723/58dbd09b149e4579988651425e0576a1.jpeg" alt="img"></p>
+<h2 id="DeepLab-v3（2017）"><a href="#DeepLab-v3（2017）" class="headerlink" title="DeepLab v3（2017）"></a>DeepLab v3（2017）</h2><p>deeplabv3的创新点主要在于<strong>串行-并行</strong>的结构，如下图所示。以v2中的不同rate的空洞卷积叠加串行结构，<strong>中间某一层的输出Low-Level-Features直接传入解码器</strong>，而串行结构后的<strong>最终输出进入并行结构采用不同rate的空洞卷积/1x1卷积/pooling进行特征提取</strong>，拼接后上采用再去和Low-Level-Features进行<strong>拼接</strong>进行后续预测等工作。</p>
+<p><img src="https://img-blog.csdnimg.cn/20191111203311239.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3dlaXhpbl80NDc5MTk2NA==,size_16,color_FFFFFF,t_70#pic_center" alt=""></p>
+<h2 id="PSPNet（CVPR-2017）"><a href="#PSPNet（CVPR-2017）" class="headerlink" title="PSPNet（CVPR 2017）"></a>PSPNet（CVPR 2017）</h2><p>特色在于<strong>金字塔池化模块</strong>，对Encoder最后输出的特征进行不同尺度的池化，因为池化后会resize，所以分辨率统一可以拼接融合，之后再进行卷积调整通道数、预测等操作。</p>
+<p>需要注意，PSPNet 通过<strong>引入空洞卷积来修改基础的 ResNet 架构</strong>，特征经过最初的池化，在整个编码器网络中以相同的分辨率进行处理（原始图像输入的<code>1/4</code>），直到它到达空间池化模块。</p>
+<p>还需要知道PSP的目的：<strong>融合图像的上下文信息，注重像素之间的关联性</strong>。PSPnet利用预训练模型提取特征后，将采用金字塔池化模块提取图像的上下文信息，并将上下文信息与提取的特征进行堆叠后，经过上采样得到最终的输出。也就是车在路上跑，鱼在水里游，车和鱼分不开，看水和路也许就分开了。</p>
+<p><img src="https://img-blog.csdnimg.cn/20190402191049975.png" alt="img"></p>
+<h2 id="RefineNet（CVPR2017）"><a href="#RefineNet（CVPR2017）" class="headerlink" title="RefineNet（CVPR2017）"></a>RefineNet（CVPR2017）</h2><p>RefineNet，一个通用的多路径优化网络，<strong>利用了整个下采样过程中可用的所有信息</strong>，使用远程残差连接实现高分辨率的预测。通过这种方式，可以使用<strong>早期卷积中的细粒度特征来直接细化捕捉高级语义特征的更深的网络层</strong>。RefineNet 的各个组件使用遵循恒等映射思想的残差连接，这允许网络进行有效的端到端训练。（意思也就是在Encoder时的所有信息都尽量用了，并且是利用早期特征来细化深层特征）</p>
+<p><img src="https://img-blog.csdnimg.cn/20190402191317912.png" alt="img"></p>
+<p>从上图可以看出，在Encoder（使用的Resnet）得到了从低层到高层的各个特征图。再利用RefineNet模块进行融合操作。RefineNet如下图</p>
+<p><img src="https://img-blog.csdnimg.cn/20190402191340916.png" alt="img"></p>
+<ul>
+<li>RCU：该部分用来作为一个自适应卷积集，主要是微调ResNet的权重。</li>
+<li>MRF：将所有的输入特征图的<strong>分辨率调整</strong>为最大特征图的分辨率尺寸。</li>
+<li>CRP：通过链式残差池化部分，可以有效的捕捉上下文信息。</li>
+<li>输出卷积：在最终的输出之前，再加一个RCU。</li>
+</ul>
+<p>RefineNet还没有研究源码，理解不深刻，还请见谅</p>
+<p>下一篇文章更新后端操作，比如CRF</p>
+]]></content>
+      <categories>
+        <category>滴滴实习-语义分割</category>
+      </categories>
+      <tags>
+        <tag>语义分割</tag>
+        <tag>Deeplab</tag>
+        <tag>Segnet</tag>
+        <tag>Unet</tag>
+        <tag>Pspnet</tag>
+        <tag>FCN</tag>
+        <tag>RefineNet</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>语义分割实例-DeeplabV3-MobilenetV2</title>
     <url>/2020/03/19/%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E5%AE%9E%E4%BE%8B-DeeplabV3-MobilenetV2/</url>
     <content><![CDATA[<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>本篇文章主要通过<strong>DeeplabV3-MobilenetV2对VOC21</strong>分类数据集进行语义分割</p>
