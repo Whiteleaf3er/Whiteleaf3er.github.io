@@ -1,11 +1,99 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>分割评价指标</title>
+    <url>/2020/03/24/%E5%88%86%E5%89%B2%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87/</url>
+    <content><![CDATA[<h2 id="混淆矩阵"><a href="#混淆矩阵" class="headerlink" title="混淆矩阵"></a>混淆矩阵</h2><p>混淆矩阵<code>matrix[i][j] = nums</code>表示对于<code>标签i</code>，有nums张图片<strong>预测</strong>为<code>第j个类别</code></p>
+<p>1.<strong>对于二分类问题</strong>，将类别1称为正例（Positive），类别2称为反例（Negative），分类器预测正确记作真（True），预测错误记作（False），由这4个基本术语相互组合，构成混淆矩阵的4个基础元素，为：</p>
+<a id="more"></a>
+
+<p>TP（True Positive）：真正例，模型预测为正例，实际是正例（模型预测为类别1，实际是类别1）<br>FP（False Positive）：假正例，模型预测为正例，实际是反例 （模型预测为类别1，实际是类别2）<br>FN（False Negative）：假反例，模型预测为反例，实际是正例 （模型预测为类别2，实际是类别1）<br>TN（True Negative）：真反例，模型预测为反例，实际是反例 （模型预测为类别2，实际是类别2）</p>
+<blockquote>
+<p>first word：      True/False——表示预测和标签是否匹配</p>
+</blockquote>
+<blockquote>
+<p>second word：Positeve/Negative——表示预测结果如何</p>
+</blockquote>
+<p><img src="https://img-blog.csdnimg.cn/2019122210085732.png" alt=""></p>
+<p>2.<strong>对于图像n分类问题</strong>，有M张图片，矩阵shape为n x n</p>
+<p>对角线——TP</p>
+<p>第 i 行之和 N1——有N1张图片真实类别标签为 i</p>
+<p>第 j 列之和 N2——有N2张图片网络预测类别为 j</p>
+<p>3.<strong>对于语义分割n分类问题</strong>，有M张图片，每张图片有H*W个像素点，矩阵shape为n x n</p>
+<p>三种问题层层递进，其实发现，语义分割相对于图像分类，可以看作是“数据集”增大了</p>
+<p>下面<strong>对语义分割一张图片</strong>（不是整个数据集）进行分析，假定输入图片大小为3*3，图片中的像素点表示其分类（即：0代表类别1，1代表类别2，2代表类别3），如图：左图a为标注图，右图b为预测图（<a href="https://blog.csdn.net/qq_21368481/article/details/80424754" target="_blank" rel="noopener">参考链接</a>）</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-20200324134024122.png" alt=""></p>
+<p>求3 x 3混淆矩阵（3x3是因为类别为3）：</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">fast_hist</span><span class="params">(a, b, n)</span>:</span></span><br><span class="line">    <span class="comment">#k为掩膜（去除了255这些点（即标签图中的白色的轮廓），其中的a&gt;=0是为了防止bincount()函数出错）</span></span><br><span class="line">    k = (a &gt;= <span class="number">0</span>) &amp; (a &lt; n) </span><br><span class="line">    <span class="comment">#bincount()函数用于统计数组内每个非负整数的个数</span></span><br><span class="line">    <span class="comment">#详见https://docs.scipy.org/doc/numpy/reference/generated/numpy.bincount.html</span></span><br><span class="line">    <span class="keyword">return</span> np.bincount(n * a[k].astype(int) + b[k], minlength=n**<span class="number">2</span>).reshape(n, n)</span><br></pre></td></tr></table></figure>
+
+<p><code>np.bincount(x,weights = None, minlength = None)</code> 首先统计x的最大值为n。然后生成长度为n+1的向量result,result[i]表示在x中为i的数出现了几次</p>
+<p>如果赋予weight实参shape同x，那么result不会是之前的result[i] = count[i]；而是result[i] = weight[x1]+weight[x2]..(x1表示第一个数值为i的索引) </p>
+<p>minlength表示result的最小长度，如果小于为None时的结果长度，此参数无意义</p>
+<p>上述代码作用是产生一行n * n个元素的向量，向量中的每个元素存储统计结果，假如该向量为d，则其中的d(i*n + j)表示预测结果为类别j，实际标签为类别i的所有像素点的数目。</p>
+<p>注意其中为什么参数x要赋值为n * a[k].astype(int) + b[k]，也就是将a中每个元素的值乘以n加b中对应元素。</p>
+<p>a\b中元素最大值为n-1，乘以n+b最大值为(n-1)n+n-1 = n**2 - 1 而混淆矩阵的大小为nxn，在调用bincount，就刚好shape对应上了；然后对于值的问题，比如真实标签中的1，1x3+1，如果b中也为1，那么位置刚好是对角线上，表示TP，如果b中为2，那么1x3+2，行数没变，依然为1，表示真实标签为1，预测值为2，对应于matrix[1] [2]；所以位置是放好了的，所以这个调库简直绝了！</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/image-202003241408343361.png" alt="image-20200324140834336"></p>
+<h2 id="指标"><a href="#指标" class="headerlink" title="指标"></a>指标</h2><ol>
+<li>PA：像素准确率</li>
+</ol>
+<p>对应：准确率（Accuracy）<br>含义：预测类别正确的像素数占总像素数的比例<br>混淆矩阵计算：<strong>对角线元素之和 / 矩阵所有元素之和</strong><br>PA = (TP + TN) / (TP + TN + FP + FN)</p>
+<ol start="2">
+<li>CPA：类别像素准确率</li>
+</ol>
+<p>对应：精准率（Precision）<br>含义：在类别 i 的预测值中，真实属于 i 类的像素准确率，换言之：模型对类别 i 的预测值有很多，其中有对有错，预测对的值占预测总值的比例<strong>（一列）</strong><br>混淆矩阵计算：<br>类1：P1 = TP / (TP + FP)<br>类2：P2 = TN / (TN + FN)<br>类3：…</p>
+<ol start="3">
+<li>MPA：类别平均像素准确率</li>
+</ol>
+<p>含义：分别计算每个类被正确分类像素数的比例，即：CPA，然后累加求平均<br>混淆矩阵计算：<br>每个类别像素准确率为：Pi（计算：对角线值 / 对应列的像素总数）<br>MPA = sum(Pi) / 类别数</p>
+<p>P类别1 = 3 / ( 3 + 0 + 0) = 1<br>P类别2 = 2 / ( 0 + 2 + 1) = 0.67<br>P类别3 = 2 / ( 0 + 1 + 2) = 0.67</p>
+<p>MPA = sum(Pi) / 类别数 = ( P类别1 + P类别2 + P类别3 ) / 3 = 0.78</p>
+<ol start="4">
+<li>IoU：交并比</li>
+</ol>
+<ul>
+<li><p>IoUi = 对角线值 / 与该值有关元素的求和 [画线法]<br>第一种求法：（混淆矩阵，以对角线值画横、竖线，将相关元素求和）<br>IoU类别1 = 3 / (3 + 0 + 0 + 0 + 0) = 1<br>IoU类别2 = 2 / (0 + 2 + 1 + 0 + 1) = 0.5<br>IoU类别3 = 2 / (0 + 1 + 2 + 0 + 1) = 0.5</p>
+</li>
+<li><p>第二种求法：（代码中用的求法：SAUB = SA + SB - SA∩B）（参考链接）<br>IoU类别1 = 3 / [(3 + 0 + 0 ) + ( 3 + 0 + 0) - 3] = 1<br>IoU类别2 = 2 / [(0 + 2 + 1 ) + (0 + 2 + 1) - 2] = 0.5<br>IoU类别3 = 2 / [(0 + 1 + 2 ) + (0 + 1 + 2) - 2] = 0.5</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">Mean_Intersection_over_Union</span><span class="params">(confusion_matrix)</span>:</span></span><br><span class="line">    <span class="comment">#axis = 0表示按列求和</span></span><br><span class="line">    MIoU = np.diag(confusion_matrix) / (</span><br><span class="line">            np.sum(confusion_matrix, axis=<span class="number">1</span>) +</span><br><span class="line">            np.sum(confusion_matrix, axis=<span class="number">0</span>) -</span><br><span class="line">            np.diag(confusion_matrix))</span><br><span class="line">    print(MIoU)</span><br><span class="line">    MIoU = np.nanmean(MIoU)  <span class="comment"># 跳过0值求mean,shape:[1, 21]</span></span><br><span class="line">    <span class="keyword">return</span> MIoU</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<ol start="5">
+<li>MIoU：平均交并比</li>
+</ol>
+<p>含义：模型对每一类预测的结果和真实值的交集与并集的比值，求和再平均的结果<br>混淆矩阵计算：<br>以求二分类的MIoU为例<br>MIoU = (IoU正例p + IoU反例n) / 2 = [ TP / (TP + FP + FN) + TN / (TN + FN + FP) ] / 2</p>
+<h2 id="语义分割-pascal-IOU"><a href="#语义分割-pascal-IOU" class="headerlink" title="语义分割-pascal-IOU"></a>语义分割-pascal-IOU</h2><p><img src="https://img-blog.csdnimg.cn/20190318100553944.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQwMjM0Njk1,size_16,color_FFFFFF,t_70" alt=""></p>
+<p>VOC数据集有21个类别，分别求IOU,上图某一张图片IOU中交集和并集的状况</p>
+<p>下面看看FCN源码中是如何计算的</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">compute_hist</span><span class="params">(net, save_dir, dataset, layer=<span class="string">'score'</span>, gt=<span class="string">'label'</span>)</span>:</span>    </span><br><span class="line">    n_cl = net.blobs[layer].channels   </span><br><span class="line">    <span class="comment">#score层的特征图数目（也即类别数，例如VOC数据集，这里就为21）    </span></span><br><span class="line">    <span class="keyword">if</span> save_dir:        </span><br><span class="line">        os.mkdir(save_dir)   <span class="comment">#创建目录    </span></span><br><span class="line">    hist = np.zeros((n_cl, n_cl)) <span class="comment">#创建一个n_cl×n_cl大小的零矩阵，用于存储分类统计表    </span></span><br><span class="line">    loss = <span class="number">0</span> <span class="comment">#初始化损失    </span></span><br><span class="line">    <span class="comment">#循环统计每一张测试/验证图片的预测结果，并求和保存在hist中    </span></span><br><span class="line">    <span class="keyword">for</span> idx <span class="keyword">in</span> dataset:        </span><br><span class="line">        net.forward()        </span><br><span class="line">        <span class="comment">#net.blobs[gt].data[0, 0]存放着H×W大小的标签图数据        		  </span></span><br><span class="line">        <span class="comment">#net.blobs[layer].data[0]存放着C×H×W大小的预测图数据（共C张），并通过argmax()获得最终的H×W大小的预测图数据（数据范围和标签图一致）（argmax本身得到的是最大值处的数组索引号）        </span></span><br><span class="line">        <span class="comment">#flatten()函数平铺整个数组为一行        </span></span><br><span class="line">        hist += fast_hist(net.blobs[gt].data[<span class="number">0</span>, <span class="number">0</span>].flatten(),                </span><br><span class="line">                 net.blobs[layer].data[<span class="number">0</span>].argmax(<span class="number">0</span>).flatten(), n_cl)       </span><br><span class="line">        <span class="keyword">if</span> save_dir:            </span><br><span class="line">            <span class="comment">#mode='P'表示产生一张单通道的彩色图            </span></span><br><span class="line">            <span class="comment">#（详http://pillow.readthedocs.io/en/3.1.x/handbook/concepts.html#concept-modes）            </span></span><br><span class="line">            im = Image.fromarray(net.blobs[layer].data[<span class="number">0</span>].argmax(<span class="number">0</span>).astype(np.uint8), mode=<span class="string">'P'</span>)            </span><br><span class="line">            im.save(os.path.join(save_dir, idx + <span class="string">'.png'</span>))        <span class="comment"># compute the loss as well        </span></span><br><span class="line">       loss += net.blobs[<span class="string">'loss'</span>].data.flat[<span class="number">0</span>]  <span class="comment">#累加每张测试图的loss    </span></span><br><span class="line">    <span class="keyword">return</span> hist, loss / len(dataset)</span><br></pre></td></tr></table></figure>
+
+<p>第15行的代码：net.blobs[layer].data[0].argmax(0).flatten(), n_cl)</p>
+<p>一张图的预测结果长这个样子？</p>
+<p>net.blobs[layer].data[0]表示n_cl x H x W的图，那么argmax(0)是怎么work的呢？</p>
+<figure class="highlight python"><table><tr><td class="code"><pre><span class="line">three_dim_array = [[[<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>],  [<span class="number">-1</span>, <span class="number">0</span>, <span class="number">3</span>, <span class="number">5</span>]],                   </span><br><span class="line">[[<span class="number">2</span>, <span class="number">7</span>, <span class="number">-1</span>, <span class="number">3</span>], [<span class="number">0</span>, <span class="number">3</span>, <span class="number">12</span>, <span class="number">4</span>]],                   </span><br><span class="line">[[<span class="number">5</span>, <span class="number">1</span>, <span class="number">0</span>, <span class="number">19</span>], [<span class="number">4</span>, <span class="number">2</span>, <span class="number">-2</span>, <span class="number">13</span>]]]</span><br><span class="line">a = np.argmax(three_dim_array, axis = <span class="number">0</span>)</span><br><span class="line">print(a)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight angelscript"><table><tr><td class="code"><pre><span class="line">[[<span class="number">2</span> <span class="number">1</span> <span class="number">0</span> <span class="number">2</span>]                                                                             [<span class="number">2</span> <span class="number">1</span> <span class="number">1</span> <span class="number">2</span>]]</span><br></pre></td></tr></table></figure>
+
+<p>比如第一个数字2是怎么来的，一共有3个通道，通道2（序号从0开始）的第一个数字为5，最大，返回其通道序号即为2； 那么在21分类中，这里的通道数是21，对于每一个像素点，哪一个通道的值最大，那么这个像素点分类自然就属于这一个通道，属于这一类（只是判断属于哪一类，还没有使用softmax计算概率）</p>
+<p>所以这样看来自然就从该层的特征图得到了预测结果</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>语义分割中指标的选取是很重要的，单单看准确率远远不够</p>
+<p>写这篇文章是因为 入职第一天看到一个学长入职的第一个任务就是求每个类的IOU并排序，想看看自己能否完成这个任务</p>
+]]></content>
+      <categories>
+        <category>滴滴实习-语义分割</category>
+      </categories>
+      <tags>
+        <tag>评价指标</tag>
+        <tag>IOU</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>大三下随笔</title>
     <url>/2020/03/23/%E5%A4%A7%E4%B8%89%E4%B8%8B%E9%9A%8F%E7%AC%94/</url>
     <content><![CDATA[<h2 id="理性的判断，这是一个转折点"><a href="#理性的判断，这是一个转折点" class="headerlink" title="理性的判断，这是一个转折点"></a>理性的判断，这是一个转折点</h2><p>2020年03月23日，来北京的第9天，明天正式开始实习了，而我还没有做出充分的准备，因为我还在想，我真的应该出来实习吗？</p>
+<a id="more"></a>
+
 <p>疫情条件，只身一人，这些其实定居下来都会适应，但是想想未来的不确定性，还是会有所焦虑 。由于大三上毛概的翻车和某些科考的不是很理想，成绩排名18%，算上美赛2.5加分看作裸分，7%（视独我加分），前13%拥有保研资格，但是目前不知道他人的加分情况，所以目前的状态就是标准的保研边缘人了。</p>
-<p>再看特保，国赛加美赛可以获得特保的资格，但是还要看学院能否分到名额，也得看自己奖项、论文和均分的硬实力够不够，所以这也属于不确定性。</p>
+<p>再看特保，国赛加美赛可以获得特保的资格，论文被录用了也符合条件，但是还要看学院能否分到名额，也得看自己奖项、论文和均分的硬实力够不够，所以这也属于不确定性。</p>
 <blockquote>
 <p>发展的好，保研+特保两手准备，万无一失，大三下出去实习，丰富经验，为夏令营导师面试和大四实习面试做准备，一切井井有条，层层递进。</p>
 </blockquote>
@@ -22,20 +110,22 @@
 </blockquote>
 <h2 id="既来之，则安之"><a href="#既来之，则安之" class="headerlink" title="既来之，则安之"></a>既来之，则安之</h2><p>但是既然出来了，所去所为，我该如何规划呢？</p>
 <ul>
-<li>3.24——4.30 刷<strong>机试题</strong>、专业课、大学数学，准备<strong>夏令营资料</strong>（简历，推荐信，常问英文..），问py有没有比赛参赛差人的，混混<strong>比赛</strong>经历（特保），若可参加，至提交前尽量跟进</li>
-<li>5.01——5.30 继续准备夏令营相关的（机试，专业课等），<strong>联系意向高校导师</strong></li>
-<li>6.01——7.30 夏令营期限，<strong>参加夏令营</strong>，特别是和老师沟通好的</li>
-<li>8.01——之后 此时实习离职，准备<strong>考研+夏令营/预推免</strong>，<strong>关注特保消息</strong></li>
+<li><p>3.24——4.30 刷<strong>机试题</strong>、专业课、大学数学，准备<strong>夏令营资料</strong>（简历，推荐信，常问英文..），</p>
+<p>问有没有比赛参差人的，混混<strong>比赛</strong>经历（特保），论文也是</p>
+</li>
+<li><p>5.01——5.30 继续准备夏令营相关的（机试，专业课等），<strong>联系意向高校导师</strong></p>
+</li>
+<li><p>6.01——7.30 夏令营期限，<strong>参加夏令营</strong>，特别是和老师沟通好的</p>
+</li>
+<li><p>8.01——之后 此时实习离职，准备<strong>考研+夏令营/预推免</strong>，<strong>关注特保消息</strong></p>
+</li>
 </ul>
 <p>所以，重点在于：</p>
 <ul>
-<li>前期认为自己能保上，<strong>积极准备保研</strong>夏令营，并且为特保也做一手准备，看是否能参加比赛</li>
+<li>前期认为自己能保上，<strong>积极准备保研</strong>夏令营，并且为特保也做一手准备，看比赛、论文方面的消息</li>
 <li>中期<strong>参加夏令营</strong>，争取拿到优秀营员</li>
 <li>后期<strong>准备考研</strong>，若保研确定参加预推免，若保研落马积极准备考研，且关注特报消息</li>
 </ul>
-<p>当然，实习进度跟进也是很重要，这是一个实习生的任务</p>
-<p>另外在此罗列一下目标夏令营院校：</p>
-<p>华科、北航    并且在7月也联系一波本校的老师，获取一个名额</p>
 ]]></content>
       <categories>
         <category>随笔</category>
