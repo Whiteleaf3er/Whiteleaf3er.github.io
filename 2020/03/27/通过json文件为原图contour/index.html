@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Gemini","version":"7.7.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="思路:1.分析json包  1.1.每个json包有多个task（红色框task_result，没有截全，之后还有），每个task对多个图片（黄色index）进行分析，分析的内容有sign与要素两种具体的任务（绿色recog_type），我们只需要对要素进行观察，要素有3类（黄色categories），每类有其相关信息，我们需要contour坐标信息 1.2. 对于每一个task_result，取">
+<meta property="og:type" content="article">
+<meta property="og:title" content="通过json文件contour">
+<meta property="og:url" content="http://yoursite.com/2020/03/27/%E9%80%9A%E8%BF%87json%E6%96%87%E4%BB%B6%E4%B8%BA%E5%8E%9F%E5%9B%BEcontour/index.html">
+<meta property="og:site_name" content="南华街617号">
+<meta property="og:description" content="思路:1.分析json包  1.1.每个json包有多个task（红色框task_result，没有截全，之后还有），每个task对多个图片（黄色index）进行分析，分析的内容有sign与要素两种具体的任务（绿色recog_type），我们只需要对要素进行观察，要素有3类（黄色categories），每类有其相关信息，我们需要contour坐标信息 1.2. 对于每一个task_result，取">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/2020032919573428321_123.png">
+<meta property="article:published_time" content="2020-03-27T06:26:21.000Z">
+<meta property="article:modified_time" content="2020-03-29T12:11:06.693Z">
+<meta property="article:author" content="南华">
+<meta property="article:tag" content="contours">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/2020032919573428321_123.png">
+
+<link rel="canonical" href="http://yoursite.com/2020/03/27/%E9%80%9A%E8%BF%87json%E6%96%87%E4%BB%B6%E4%B8%BA%E5%8E%9F%E5%9B%BEcontour/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true
+  };
+</script>
+
+  <title>通过json文件contour | 南华街617号</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">南华街617号</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">七栋一单元11-2</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="search-pop-overlay">
+  <div class="popup search-popup">
+      <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+  </div>
+</div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/03/27/%E9%80%9A%E8%BF%87json%E6%96%87%E4%BB%B6%E4%B8%BA%E5%8E%9F%E5%9B%BEcontour/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/touxiang.jpg">
+      <meta itemprop="name" content="南华">
+      <meta itemprop="description" content="一条该，从技术延申至生活">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="南华街617号">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          通过json文件contour
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-03-27 14:26:21" itemprop="dateCreated datePublished" datetime="2020-03-27T14:26:21+08:00">2020-03-27</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/%E6%BB%B4%E6%BB%B4%E5%AE%9E%E4%B9%A0-%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2/" itemprop="url" rel="index"><span itemprop="name">滴滴实习-语义分割</span></a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/03/27/%E9%80%9A%E8%BF%87json%E6%96%87%E4%BB%B6%E4%B8%BA%E5%8E%9F%E5%9B%BEcontour/" class="post-meta-item leancloud_visitors" data-flag-title="通过json文件contour" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/03/27/%E9%80%9A%E8%BF%87json%E6%96%87%E4%BB%B6%E4%B8%BA%E5%8E%9F%E5%9B%BEcontour/#valine-comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/03/27/%E9%80%9A%E8%BF%87json%E6%96%87%E4%BB%B6%E4%B8%BA%E5%8E%9F%E5%9B%BEcontour/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>4 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="思路"><a href="#思路" class="headerlink" title="思路:"></a>思路:</h2><p>1.分析json包</p>
+<p><img src="https://cdn.jsdelivr.net/gh/Whiteleaf3er/FigureBed/pictures/2020032919573428321_123.png" alt="image-20200329195734283"></p>
+<p>1.1.每个json包有多个task（红色框task_result，没有截全，之后还有），每个task对多个图片（黄色index）进行分析，分析的内容有sign与要素两种具体的任务（绿色recog_type），我们只需要对要素进行观察，要素有3类（黄色categories），每类有其相关信息，我们需要contour坐标信息</p>
+<p>1.2. 对于每一个task_result，取到每一个task_resulrt中的每一张图片，<strong>双重循环</strong></p>
+<p>1.3.针对单个图片可用一个list1表示[URL,Allyaosu]</p>
+<p>Url = ‘ ‘</p>
+<p>单个图片有多个要素</p>
+<p>Allyaosu = [label,坐标点]</p>
+<p>label = 0/1/2</p>
+<p>坐标点 = [][[1,2][[1,2] [2,3]…]…二维list</p>
+<p>每个图片输出一个list1 = [URL,Allyaosu] 分别表示图片url、图片包含的各要素信息，长度为2</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">下面关于一个task的数据结构展示</span><br><span class="line"><span class="comment"># onetask[a][b][c][d] a表示图片index；b=0表示url，b=1表示所有要素集合；c表示要素index；d=0表示要素label，d=1表示要素坐标集合</span></span><br><span class="line"><span class="comment"># onetask[2][0]表示图片url，one_json[2][1]表示图片所含的所有要素集合,one_json[2][1][0][1]表示图片所含第一个要素的坐标集合</span></span><br></pre></td></tr></table></figure>
+
+<p>2.读取EXCEL：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">data = pd.read_excel(filename,sheet_names = <span class="string">'Sheet1'</span>, skiprows=<span class="number">1</span>,usecols = cols,names=<span class="literal">None</span>)</span><br><span class="line">df_li = data.values.tolist()</span><br><span class="line">df_li = np.squeeze(df_li) <span class="comment">#b 去维度</span></span><br></pre></td></tr></table></figure>
+
+<p>3.获取原图：<code>skimage.io.imread(img_url,as_grey=False)</code></p>
+<p>4.contour：<code>cv2.drawContours(draw_img, contours_0, -1, (0, 255, 0), 3)  # 障碍物，青绿色</code></p>
+<h2 id="源代码"><a href="#源代码" class="headerlink" title="源代码"></a>源代码</h2><figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># import sklearn</span></span><br><span class="line"><span class="keyword">import</span> cv2</span><br><span class="line"><span class="keyword">import</span> skimage.io</span><br><span class="line"><span class="keyword">import</span> skimage.color</span><br><span class="line"><span class="keyword">import</span> skimage.transform</span><br><span class="line"><span class="keyword">import</span> skimage.filters</span><br><span class="line"><span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt</span><br><span class="line"><span class="keyword">import</span> numpy <span class="keyword">as</span> np</span><br><span class="line"><span class="keyword">import</span> json</span><br><span class="line"><span class="keyword">import</span> os</span><br><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line">count = <span class="number">0</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">excel_to_needurl</span><span class="params">(filename)</span>:</span></span><br><span class="line">    cols = [<span class="number">1</span>]</span><br><span class="line">    data = pd.read_excel(filename,sheet_names = <span class="string">'Sheet1'</span>, skiprows=<span class="number">1</span>,usecols = cols,names=<span class="literal">None</span>)</span><br><span class="line">    df_li = data.values.tolist()</span><br><span class="line">    df_li = np.squeeze(df_li)</span><br><span class="line">    <span class="keyword">return</span> df_li</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">draw_onejson_with_nimg</span><span class="params">(path_json, need_urls)</span>:</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">with</span> open(path_json, <span class="string">'r'</span>,encoding=<span class="string">'utf-8'</span>) <span class="keyword">as</span> load_f:</span><br><span class="line"></span><br><span class="line">        data = json.load(load_f)</span><br><span class="line">        <span class="comment">#dic对应一个task，一个task对应多个图片</span></span><br><span class="line">        <span class="keyword">for</span> dic <span class="keyword">in</span> data:</span><br><span class="line">            list_result = dic[<span class="string">'task_result'</span>]<span class="comment">#len可以取到有这个task有多少url-图片</span></span><br><span class="line">            one_task = []</span><br><span class="line">            <span class="keyword">for</span> one_img_result <span class="keyword">in</span> list_result: <span class="comment">#取到每个task中的每个图片信息</span></span><br><span class="line">                url = one_img_result[<span class="string">'pic_url'</span>]</span><br><span class="line">                alltype = one_img_result[<span class="string">'result'</span>]</span><br><span class="line">                fbys = alltype[<span class="number">1</span>]  <span class="comment"># 第二个是关于fbys，第一个为sign</span></span><br><span class="line">                allfbys = fbys[<span class="string">'objs'</span>]</span><br><span class="line">                oneimg = []</span><br><span class="line">                oneimg.append(url)  <span class="comment"># oneimg[0] = url</span></span><br><span class="line">                all_ys = []  <span class="comment"># 所有的ys，每一个ys = [label,坐标集合]</span></span><br><span class="line">                <span class="keyword">for</span> ys <span class="keyword">in</span> allfbys:</span><br><span class="line">                    ys_temp = []</span><br><span class="line">                    <span class="keyword">if</span> (ys[<span class="string">'category'</span>] == <span class="string">'zaw'</span>):</span><br><span class="line">                        ys_temp.append(<span class="number">0</span>)</span><br><span class="line">                    <span class="keyword">elif</span> (ys[<span class="string">'category'</span>] == <span class="string">'wl'</span>):</span><br><span class="line">                        ys_temp.append(<span class="number">1</span>)</span><br><span class="line">                    <span class="keyword">elif</span> (ys[<span class="string">'category'</span>] == <span class="string">'hht'</span>):</span><br><span class="line">                        ys_temp.append(<span class="number">2</span>)</span><br><span class="line">                    <span class="keyword">else</span>:</span><br><span class="line">                        <span class="keyword">continue</span></span><br><span class="line">                        <span class="comment"># 一般来说这个情况是要素没预测到,对应一个空[]</span></span><br><span class="line">                    ys_temp.append(ys[<span class="string">'contour'</span>])  <span class="comment"># ys_temp = [label , [[x,y]...] ]</span></span><br><span class="line">                    all_ys.append(ys_temp)  <span class="comment"># all_ys = [ys_temp0,ys_temp1..]</span></span><br><span class="line">                oneimg.append(all_ys)  <span class="comment"># oneimg = [url,all_ys]</span></span><br><span class="line">                one_task.append(oneimg)</span><br><span class="line">            <span class="comment">#到这一层循环结束，得到一个ont_task=one_json（以前的名）</span></span><br><span class="line">            <span class="comment"># one_json[a][b][c][d] a表示图片index；b=0表示url，b=1表示所有要素集合；c表示要素index；d=0表示要素label，d=1表示要素坐标集合</span></span><br><span class="line">            <span class="comment"># one_json[2][0]表示图片url，one_json[2][1]表示图片所含的所有要素集合,one_json[2][1][0][1]表示图片所含第一个要素的坐标集合</span></span><br><span class="line">            <span class="keyword">for</span> image1 <span class="keyword">in</span> one_task:</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (image1[<span class="number">0</span>] <span class="keyword">not</span> <span class="keyword">in</span> need_urls):</span><br><span class="line">                    <span class="keyword">continue</span></span><br><span class="line">                print(<span class="string">"map:,"</span>,image1[<span class="number">0</span>])</span><br><span class="line">                <span class="keyword">global</span> count</span><br><span class="line">                count +=<span class="number">1</span></span><br><span class="line">                img_url = image1[<span class="number">0</span>].replace(<span class="string">"geo.map.xiaojukeji.com"</span>, <span class="string">"10.85.128.175:8002"</span>,<span class="number">1</span>)</span><br><span class="line">                img = skimage.io.imread(img_url,as_grey=<span class="literal">False</span>)</span><br><span class="line">                draw_img = img.copy()</span><br><span class="line"></span><br><span class="line">                <span class="comment"># img = skimage.color.rgb2gray(img)</span></span><br><span class="line">                <span class="comment"># t1 = skimage.filters.threshold_otsu(img)  # 对灰色图片进行预直化操作</span></span><br><span class="line">                <span class="comment"># for i in range(1080):</span></span><br><span class="line">                <span class="comment">#     for j in range(1920):</span></span><br><span class="line">                <span class="comment">#         if (img[i, j] &lt;= t1):</span></span><br><span class="line">                <span class="comment">#             img[i, j] = 0</span></span><br><span class="line">                <span class="comment">#         else:</span></span><br><span class="line">                <span class="comment">#             img[i, j] = 1</span></span><br><span class="line"></span><br><span class="line">                <span class="keyword">for</span> yaosu1 <span class="keyword">in</span> image1[<span class="number">1</span>]:</span><br><span class="line">                    contours_0 = []</span><br><span class="line">                    contours_1 = []</span><br><span class="line">                    contours_2 = []</span><br><span class="line">                    zuobiao1 = np.array(yaosu1[<span class="number">1</span>])</span><br><span class="line">                    zuobiao1 = zuobiao1[:, np.newaxis, :]</span><br><span class="line">                    <span class="keyword">if</span> (yaosu1[<span class="number">0</span>] == <span class="number">0</span>):</span><br><span class="line">                        contours_0.append(zuobiao1)</span><br><span class="line">                        cv2.drawContours(draw_img, contours_0, <span class="number">-1</span>, (<span class="number">0</span>, <span class="number">255</span>, <span class="number">0</span>), <span class="number">3</span>)  <span class="comment"># 障碍物，青绿色</span></span><br><span class="line">                    <span class="keyword">elif</span> (yaosu1[<span class="number">0</span>] == <span class="number">1</span>):</span><br><span class="line">                        contours_1.append(zuobiao1)</span><br><span class="line">                        cv2.drawContours(draw_img, contours_1, <span class="number">-1</span>, (<span class="number">255</span>, <span class="number">0</span>, <span class="number">255</span>), <span class="number">3</span>)  <span class="comment"># 围栏， 紫罗兰</span></span><br><span class="line">                    <span class="keyword">else</span>:</span><br><span class="line">                        contours_2.append(zuobiao1)</span><br><span class="line">                        cv2.drawContours(draw_img, contours_2, <span class="number">-1</span>, (<span class="number">255</span>, <span class="number">255</span>, <span class="number">0</span>), <span class="number">3</span>)  <span class="comment"># 黄黑条 黄色</span></span><br><span class="line">                <span class="comment"># skimage.io.imshow(draw_img)</span></span><br><span class="line">                <span class="comment"># plt.show()</span></span><br><span class="line">                img_name = img_url.replace(<span class="string">"http://10.85.128.175:8002/static/tac_pic_front/"</span>,<span class="string">""</span>,<span class="number">1</span>)</span><br><span class="line">                save_path = os.getcwd() + <span class="string">'/contours_result/'</span> + img_name</span><br><span class="line">                skimage.io.imsave(save_path, draw_img)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">darw_contour</span><span class="params">(json_dir,need_urls)</span>:</span></span><br><span class="line">    filedir = os.getcwd() + json_dir</span><br><span class="line">    filenames = os.listdir(filedir)</span><br><span class="line">    <span class="keyword">for</span> filename <span class="keyword">in</span> filenames:</span><br><span class="line">        filepath = filedir + <span class="string">'/'</span> + filename</span><br><span class="line">        <span class="comment">#print(filepath, type(filepath))</span></span><br><span class="line">        size = os.path.getsize(filepath)</span><br><span class="line">        <span class="keyword">if</span> (size == <span class="number">0</span>):</span><br><span class="line">            <span class="keyword">continue</span></span><br><span class="line">        draw_onejson_with_nimg(filepath,need_urls)</span><br><span class="line"></span><br><span class="line">json_dir = <span class="string">'/mid_json_dir'</span></span><br><span class="line">excel_path = <span class="string">'./need_label.xlsx'</span></span><br><span class="line"><span class="comment"># 都是.json，需要注意空文件，跳过处理</span></span><br><span class="line"><span class="keyword">if</span> __name__ ==<span class="string">'__main__'</span>:</span><br><span class="line">    print(count)</span><br><span class="line">    need_urls = excel_to_needurl(excel_path)</span><br><span class="line">    darw_contour(json_dir,need_urls)</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+      
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/contours/" rel="tag"># contours</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/25/%E8%AF%84%E4%BB%B7%E6%8C%87%E6%A0%87-PR%E5%9B%BE%E7%BB%98%E5%88%B6/" rel="prev" title="评价指标-PR图绘制">
+      <i class="fa fa-chevron-left"></i> 评价指标-PR图绘制
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/03/27/linux%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C/" rel="next" title="linux服务器常用操作">
+      linux服务器常用操作 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="valine-comments"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#思路"><span class="nav-number">1.</span> <span class="nav-text">思路:</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#源代码"><span class="nav-number">2.</span> <span class="nav-text">源代码</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="南华"
+      src="/images/touxiang.jpg">
+  <p class="site-author-name" itemprop="name">南华</p>
+  <div class="site-description" itemprop="description">一条该，从技术延申至生活</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">17</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/Whiteleaf3er" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;Whiteleaf3er" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/784056528@qq.com" title="E-Mail → 784056528@qq.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://weibo.com/" title="Weibo → https:&#x2F;&#x2F;weibo.com&#x2F;" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>Weibo</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.zhihu.com/people/liu-hao-33-54" title="Zhihu → https:&#x2F;&#x2F;www.zhihu.com&#x2F;people&#x2F;liu-hao-33-54" rel="noopener" target="_blank"><i class="fa fa-fw fa-instagram"></i>Zhihu</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">南华</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">49k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">45 分钟</span>
+</div>
+
+        
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    url = encodeURI(url);
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = decodeURI(visitors.id);
+      var title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              })
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            let target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : 'c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz',
+            'X-LC-Key'    : 'Vjdsl89qLL8cdlQ8COrOi7pI',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.loadComments(document.querySelector('#valine-comments'), () => {
+  NexT.utils.getScript('https://cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js', () => {
+    var GUEST = ['nick', 'mail', 'link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item => {
+      return GUEST.includes(item);
+    });
+    new Valine({
+      el         : '#valine-comments',
+      verify     : false,
+      notify     : false,
+      appId      : 'c40oBjedY8eoR7smyIEeYkiv-gzGzoHsz',
+      appKey     : 'Vjdsl89qLL8cdlQ8COrOi7pI',
+      placeholder: "说你所说",
+      avatar     : 'mm',
+      meta       : guest,
+      pageSize   : '10' || 10,
+      visitor    : false,
+      lang       : 'zh-CN' || 'zh-cn',
+      path       : location.pathname,
+      recordIP   : false,
+      serverURLs : ''
+    });
+  }, window.Valine);
+});
+</script>
+
+</body>
+</html>
